@@ -14,7 +14,12 @@ import {
   YAxis,
 } from "recharts";
 import { AppShell } from "@/components/app-shell";
+import { MonthlyPulseCard, WeeklyReviewCard } from "@/components/reflections";
 import { insightsQueryOptions } from "@/lib/insights-queries";
+import {
+  pulsesQueryOptions,
+  weeklyReviewQueryOptions,
+} from "@/lib/reflections-queries";
 import { TECHNIQUES } from "@/lib/techniques";
 
 export const Route = createFileRoute("/_authenticated/insights")({
@@ -28,8 +33,11 @@ export const Route = createFileRoute("/_authenticated/insights")({
       },
     ],
   }),
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(insightsQueryOptions(30)),
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData(insightsQueryOptions(30));
+    context.queryClient.ensureQueryData(weeklyReviewQueryOptions());
+    context.queryClient.ensureQueryData(pulsesQueryOptions());
+  },
   component: InsightsPage,
 });
 
@@ -153,10 +161,10 @@ function InsightsPage() {
           </div>
         </section>
 
-        {/* Weekly review + best time */}
+        {/* This week + best time */}
         <section className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-5">
-            <h2 className="mb-3 font-serif text-xl">Weekly review</h2>
+            <h2 className="mb-3 font-serif text-xl">This week</h2>
             <p className="text-3xl font-medium text-foreground">
               {data.weekly.lastWeekMinutes}
               <span className="ml-1 text-base font-normal text-muted-foreground">min</span>
@@ -290,6 +298,12 @@ function InsightsPage() {
               />
             </div>
           </div>
+        </section>
+
+        {/* Reflections */}
+        <section className="grid gap-4 md:grid-cols-2">
+          <WeeklyReviewCard />
+          <MonthlyPulseCard />
         </section>
 
         {/* Notes */}
