@@ -89,15 +89,40 @@ function SessionPage() {
 function SetupView() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const search = Route.useSearch();
+  const { data: goals = [] } = useQuery(goalsQueryOptions());
+  const activeGoals = goals.filter((g) => g.status === "active");
   const start = useServerFn(startSession);
-  const [task, setTask] = useState("");
-  const [technique, setTechnique] = useState<TechniqueId>("pomodoro");
-  const [minutes, setMinutes] = useState(TECHNIQUES.pomodoro.defaultMinutes);
+  const [task, setTask] = useState(search.task ?? "");
+  const [technique, setTechnique] = useState<TechniqueId>(
+    search.technique ?? "pomodoro",
+  );
+  const [minutes, setMinutes] = useState(
+    search.minutes ?? TECHNIQUES.pomodoro.defaultMinutes,
+  );
+  const [goalId, setGoalId] = useState<string | "">(search.goal_id ?? "");
+  const selectedGoal = activeGoals.find((g) => g.id === goalId);
+  const deadlineSoon =
+    selectedGoal?.deadline &&
+    (new Date(selectedGoal.deadline).getTime() - Date.now()) /
+      (24 * 60 * 60 * 1000) <=
+      7;
   const [examMode, setExamMode] = useState(false);
+  useEffect(() => {
+    if (deadlineSoon) setExamMode(true);
+  }, [deadlineSoon]);
 
   const m = useMutation({
     mutationFn: () =>
-      start({ data: { task: task.trim(), technique, planned_minutes: minutes, exam_mode: examMode } }),
+      start({
+        data: {
+          task: task.trim(),
+          technique,
+          planned_minutes: minutes,
+          exam_mode: examMode,
+          goal_id: goalId || null,
+        },
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["activeSession"] });
     },
