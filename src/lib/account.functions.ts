@@ -35,11 +35,13 @@ export const deleteAccount = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const uid = context.userId;
     // Wipe user-owned rows (RLS-safe via user client).
+    await context.supabase.from("evidence").delete().eq("user_id", uid);
     await context.supabase.from("checkins").delete().eq("user_id", uid);
     await context.supabase.from("wrapup_tags").delete().eq("user_id", uid);
     await context.supabase.from("sessions").delete().eq("user_id", uid);
     await context.supabase.from("planned_blocks").delete().eq("user_id", uid);
     await context.supabase.from("goals").delete().eq("user_id", uid);
+    await context.supabase.from("events").delete().eq("user_id", uid);
     await context.supabase.from("profiles").delete().eq("id", uid);
 
     // Delete the auth user with the admin client.
