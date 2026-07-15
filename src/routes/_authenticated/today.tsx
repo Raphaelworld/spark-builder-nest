@@ -37,6 +37,21 @@ function TodayPage() {
   const navigate = useNavigate();
   const { data: active } = useQuery(activeSessionQueryOptions());
   const { data: summary } = useQuery(todaySummaryQueryOptions());
+  const { data: goals = [] } = useQuery(goalsQueryOptions());
+  const { data: blocks = [] } = useQuery(plannedBlocksQueryOptions());
+  const activeGoals = goals.filter((g) => g.status === "active");
+  const todayIdx = (new Date().getDay() + 6) % 7;
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const nextBlock =
+    blocks
+      .filter((b) => b.day_of_week === todayIdx && b.start_minute >= nowMin)
+      .sort((a, b) => a.start_minute - b.start_minute)[0] ??
+    blocks
+      .filter((b) => b.day_of_week > todayIdx)
+      .sort(
+        (a, b) =>
+          a.day_of_week - b.day_of_week || a.start_minute - b.start_minute,
+      )[0];
 
   return (
     <AppShell>
