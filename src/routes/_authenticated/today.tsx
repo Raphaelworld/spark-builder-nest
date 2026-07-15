@@ -111,6 +111,10 @@ function TodayPage() {
 
         <CoachCard />
 
+        <EvidenceCard />
+
+
+
 
         <section className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-5">
