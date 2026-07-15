@@ -14,7 +14,12 @@ import {
   YAxis,
 } from "recharts";
 import { AppShell } from "@/components/app-shell";
+import { MonthlyPulseCard, WeeklyReviewCard } from "@/components/reflections";
 import { insightsQueryOptions } from "@/lib/insights-queries";
+import {
+  pulsesQueryOptions,
+  weeklyReviewQueryOptions,
+} from "@/lib/reflections-queries";
 import { TECHNIQUES } from "@/lib/techniques";
 
 export const Route = createFileRoute("/_authenticated/insights")({
