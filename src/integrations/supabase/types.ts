@@ -14,7 +14,163 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      checkins: {
+        Row: {
+          confidence: number
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["checkin_kind"]
+          note: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          confidence: number
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["checkin_kind"]
+          note?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["checkin_kind"]
+          note?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkins_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          coach_tone: string
+          created_at: string
+          default_duration: number
+          default_technique: string
+          display_name: string | null
+          id: string
+          onboarding_completed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          coach_tone?: string
+          created_at?: string
+          default_duration?: number
+          default_technique?: string
+          display_name?: string | null
+          id: string
+          onboarding_completed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          coach_tone?: string
+          created_at?: string
+          default_duration?: number
+          default_technique?: string
+          display_name?: string | null
+          id?: string
+          onboarding_completed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          abandon_reason: string | null
+          created_at: string
+          ended_at: string | null
+          exam_mode: boolean
+          focus_rating: number | null
+          id: string
+          next_time_note: string | null
+          planned_minutes: number
+          started_at: string
+          status: Database["public"]["Enums"]["session_status"]
+          task: string
+          technique: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abandon_reason?: string | null
+          created_at?: string
+          ended_at?: string | null
+          exam_mode?: boolean
+          focus_rating?: number | null
+          id?: string
+          next_time_note?: string | null
+          planned_minutes?: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["session_status"]
+          task: string
+          technique?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abandon_reason?: string | null
+          created_at?: string
+          ended_at?: string | null
+          exam_mode?: boolean
+          focus_rating?: number | null
+          id?: string
+          next_time_note?: string | null
+          planned_minutes?: number
+          started_at?: string
+          status?: Database["public"]["Enums"]["session_status"]
+          task?: string
+          technique?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wrapup_tags: {
+        Row: {
+          created_at: string
+          id: string
+          polarity: Database["public"]["Enums"]["wrapup_polarity"]
+          session_id: string
+          tag: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          polarity: Database["public"]["Enums"]["wrapup_polarity"]
+          session_id: string
+          tag: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          polarity?: Database["public"]["Enums"]["wrapup_polarity"]
+          session_id?: string
+          tag?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wrapup_tags_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +179,9 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      checkin_kind: "auto" | "manual" | "stuck"
+      session_status: "active" | "completed" | "abandoned"
+      wrapup_polarity: "worked" | "didnt"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +308,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      checkin_kind: ["auto", "manual", "stuck"],
+      session_status: ["active", "completed", "abandoned"],
+      wrapup_polarity: ["worked", "didnt"],
+    },
   },
 } as const
