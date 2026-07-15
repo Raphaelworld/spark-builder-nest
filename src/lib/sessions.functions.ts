@@ -147,6 +147,11 @@ export const abandonSession = createServerFn({ method: "POST" })
       .eq("id", data.session_id)
       .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
+    await context.supabase.from("events").insert({
+      user_id: context.userId,
+      name: "session_abandoned",
+      payload: { session_id: data.session_id, reason: data.reason ?? null } as never,
+    });
     return { ok: true };
   });
 
