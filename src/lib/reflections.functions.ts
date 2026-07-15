@@ -37,9 +37,7 @@ function actualMinutes(s: SessionRow): number {
 }
 
 async function computeWeekStats(
-  supabase: NonNullable<Parameters<typeof requireSupabaseAuth.middleware>[0]> extends never
-    ? never
-    : any,
+  supabase: any,
   userId: string,
   start: Date,
 ) {
