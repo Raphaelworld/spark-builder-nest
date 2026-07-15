@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { profileQueryOptions } from "@/lib/profile-queries";
 import { updateProfile } from "@/lib/profile.functions";
+import { exportUserData, deleteAccount } from "@/lib/account.functions";
 import { TECHNIQUES, type TechniqueId } from "@/lib/techniques";
 import { supabase } from "@/integrations/supabase/client";
 
