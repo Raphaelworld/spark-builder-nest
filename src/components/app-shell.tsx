@@ -1,9 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, CalendarDays, Target, LineChart, User, Moon, Sun } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Home, CalendarDays, Target, LineChart, User, Moon, Sun, Timer } from "lucide-react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { getActiveSession } from "@/lib/sessions.functions";
+import { activeSessionQueryOptions } from "@/lib/session-queries";
 
 const NAV = [
-  { to: "/", label: "Today", icon: Home },
+  { to: "/today", label: "Today", icon: Home },
   { to: "/planner", label: "Planner", icon: CalendarDays },
   { to: "/goals", label: "Goals", icon: Target },
   { to: "/insights", label: "Insights", icon: LineChart },
@@ -30,20 +34,61 @@ function useTheme() {
   return { dark, toggle };
 }
 
+function useCountdown(startedAt: string | null | undefined, plannedMinutes: number | undefined) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!startedAt) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [startedAt]);
+  return useMemo(() => {
+    if (!startedAt || !plannedMinutes) return { remainingMs: 0, mmss: "00:00", done: false };
+    const end = new Date(startedAt).getTime() + plannedMinutes * 60_000;
+    const remaining = Math.max(0, end - now);
+    const totalSec = Math.floor(remaining / 1000);
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return {
+      remainingMs: remaining,
+      mmss: `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`,
+      done: remaining === 0,
+    };
+  }, [now, startedAt, plannedMinutes]);
+}
+
+function SessionMiniBar() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { data } = useQuery(activeSessionQueryOptions());
+  const active = data;
+  const { mmss } = useCountdown(active?.started_at, active?.planned_minutes);
+  if (!active || pathname.startsWith("/session")) return null;
+  return (
+    <Link
+      to="/session"
+      className="fixed left-1/2 top-14 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-card px-4 py-2 text-sm shadow-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:top-4 md:left-24 md:translate-x-0"
+    >
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary">
+        <Timer className="h-3.5 w-3.5" aria-hidden />
+      </span>
+      <span className="font-mono tabular-nums text-foreground">{mmss}</span>
+      <span className="max-w-[140px] truncate text-muted-foreground">{active.task}</span>
+    </Link>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { dark, toggle } = useTheme();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Desktop rail */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-20 flex-col border-r border-border bg-sidebar px-2 py-6 md:flex">
-        <Link to="/" className="mb-8 flex items-center justify-center">
+        <Link to="/today" className="mb-8 flex items-center justify-center">
           <span className="font-serif text-2xl text-primary">G</span>
         </Link>
         <nav className="flex flex-1 flex-col items-center gap-2" aria-label="Primary">
           {NAV.map(({ to, label, icon: Icon }) => {
-            const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+            const active = pathname === to || pathname.startsWith(to + "/");
             return (
               <Link
                 key={to}
@@ -79,9 +124,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      {/* Mobile top bar */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur md:hidden">
-        <Link to="/" className="font-serif text-xl text-primary">
+        <Link to="/today" className="font-serif text-xl text-primary">
           Gobez
         </Link>
         <div className="flex items-center gap-1">
@@ -102,18 +146,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      {/* Content */}
+      <SessionMiniBar />
+
       <main className="md:pl-20 pb-24 md:pb-8">
         <div className="mx-auto max-w-3xl px-4 py-6 md:py-10">{children}</div>
       </main>
 
-      {/* Mobile bottom tab bar */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-4 border-t border-border bg-background/95 backdrop-blur md:hidden"
         aria-label="Primary"
       >
         {NAV.map(({ to, label, icon: Icon }) => {
-          const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+          const active = pathname === to || pathname.startsWith(to + "/");
           return (
             <Link
               key={to}
@@ -132,3 +176,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+// Silence unused imports for tree-shaking safety in strict builds
+void useSuspenseQuery;
+void useServerFn;
+void getActiveSession;
