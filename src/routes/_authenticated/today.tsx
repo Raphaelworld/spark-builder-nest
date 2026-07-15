@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Flame, Sparkles, Play, X } from "lucide-react";
-import { useState } from "react";
+import { Flame, Play } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { CoachCard } from "@/components/coach-card";
+import { OnboardingOverlay } from "@/components/onboarding-overlay";
 import {
   activeSessionQueryOptions,
   todaySummaryQueryOptions,
@@ -11,6 +12,8 @@ import {
   goalsQueryOptions,
   plannedBlocksQueryOptions,
 } from "@/lib/planner-queries";
+import { profileQueryOptions } from "@/lib/profile-queries";
+import { insightsQueryOptions } from "@/lib/insights-queries";
 
 export const Route = createFileRoute("/_authenticated/today")({
   loader: ({ context }) => {
@@ -18,6 +21,8 @@ export const Route = createFileRoute("/_authenticated/today")({
     context.queryClient.ensureQueryData(todaySummaryQueryOptions());
     context.queryClient.ensureQueryData(goalsQueryOptions());
     context.queryClient.ensureQueryData(plannedBlocksQueryOptions());
+    context.queryClient.ensureQueryData(profileQueryOptions());
+    context.queryClient.ensureQueryData(insightsQueryOptions(30));
   },
   head: () => ({
     meta: [{ title: "Today — Gobez" }],
@@ -33,10 +38,10 @@ export const Route = createFileRoute("/_authenticated/today")({
 });
 
 function TodayPage() {
-  const [showCoach, setShowCoach] = useState(true);
   const navigate = useNavigate();
   const { data: active } = useQuery(activeSessionQueryOptions());
   const { data: summary } = useQuery(todaySummaryQueryOptions());
+  const { data: profile } = useQuery(profileQueryOptions());
   const { data: goals = [] } = useQuery(goalsQueryOptions());
   const { data: blocks = [] } = useQuery(plannedBlocksQueryOptions());
   const activeGoals = goals.filter((g) => g.status === "active");
@@ -52,6 +57,8 @@ function TodayPage() {
         (a, b) =>
           a.day_of_week - b.day_of_week || a.start_minute - b.start_minute,
       )[0];
+  const firstName = profile?.display_name?.split(" ")[0]?.trim();
+
 
   return (
     <AppShell>
@@ -65,8 +72,9 @@ function TodayPage() {
             })}
           </p>
           <h1 className="font-serif text-4xl leading-tight text-foreground md:text-5xl">
-            Ready to focus?
+            {firstName ? `Ready to focus, ${firstName}?` : "Ready to focus?"}
           </h1>
+
         </header>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -98,30 +106,8 @@ function TodayPage() {
           </div>
         </button>
 
-        {showCoach && (
-          <div className="relative rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <button
-              onClick={() => setShowCoach(false)}
-              aria-label="Dismiss"
-              className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="flex items-start gap-3 pr-6">
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-                <Sparkles className="h-4 w-4" aria-hidden />
-              </span>
-              <div>
-                <p className="text-sm font-medium text-foreground">A gentle nudge</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {summary?.lastNote
-                    ? `Last time you noted: "${summary.lastNote}"`
-                    : "Even 25 minutes of focused work is a real win. Start small — momentum follows."}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        <CoachCard />
+
 
         <section className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-5">
@@ -184,6 +170,8 @@ function TodayPage() {
           </div>
         </section>
       </div>
+      <OnboardingOverlay />
     </AppShell>
   );
+
 }
