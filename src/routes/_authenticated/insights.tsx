@@ -33,8 +33,11 @@ export const Route = createFileRoute("/_authenticated/insights")({
       },
     ],
   }),
-  loader: ({ context }) =>
-    context.queryClient.ensureQueryData(insightsQueryOptions(30)),
+  loader: ({ context }) => {
+    context.queryClient.ensureQueryData(insightsQueryOptions(30));
+    context.queryClient.ensureQueryData(weeklyReviewQueryOptions());
+    context.queryClient.ensureQueryData(pulsesQueryOptions());
+  },
   component: InsightsPage,
 });
 
