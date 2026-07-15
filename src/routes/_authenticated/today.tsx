@@ -128,25 +128,59 @@ function TodayPage() {
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Next planned block
             </p>
-            <p className="mt-2 text-sm text-foreground">
-              Nothing planned yet.{" "}
-              <Link to="/planner" className="text-primary hover:underline">
-                Open the planner
-              </Link>
-              .
-            </p>
+            {nextBlock ? (
+              <div className="mt-2 space-y-1">
+                <p className="font-serif text-lg text-foreground">
+                  {nextBlock.title}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][
+                    nextBlock.day_of_week
+                  ]}{" "}
+                  ·{" "}
+                  {`${Math.floor(nextBlock.start_minute / 60)}:${String(
+                    nextBlock.start_minute % 60,
+                  ).padStart(2, "0")}`}{" "}
+                  · {nextBlock.planned_minutes}m
+                </p>
+                <Link
+                  to="/planner"
+                  className="mt-1 inline-block text-xs text-primary hover:underline"
+                >
+                  Open planner
+                </Link>
+              </div>
+            ) : (
+              <p className="mt-2 text-sm text-foreground">
+                Nothing planned yet.{" "}
+                <Link to="/planner" className="text-primary hover:underline">
+                  Open the planner
+                </Link>
+                .
+              </p>
+            )}
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Active goals
             </p>
-            <p className="mt-2 text-sm text-foreground">
-              No goals set.{" "}
-              <Link to="/goals" className="text-primary hover:underline">
-                Choose up to three
-              </Link>
-              .
-            </p>
+            {activeGoals.length > 0 ? (
+              <ul className="mt-2 space-y-1 text-sm text-foreground">
+                {activeGoals.slice(0, 3).map((g) => (
+                  <li key={g.id} className="truncate">
+                    · {g.title}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-sm text-foreground">
+                No goals set.{" "}
+                <Link to="/goals" className="text-primary hover:underline">
+                  Choose up to three
+                </Link>
+                .
+              </p>
+            )}
           </div>
         </section>
       </div>
