@@ -170,6 +170,8 @@ function TodayPage() {
           </div>
         </section>
       </div>
+      <OnboardingOverlay />
     </AppShell>
   );
+
 }
