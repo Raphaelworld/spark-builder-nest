@@ -5,7 +5,7 @@ export const exportUserData = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const uid = context.userId;
-    const [profile, sessions, checkins, wrapupTags, goals, plannedBlocks] =
+    const [profile, sessions, checkins, wrapupTags, goals, plannedBlocks, evidence, events] =
       await Promise.all([
         context.supabase.from("profiles").select("*").eq("id", uid).maybeSingle(),
         context.supabase.from("sessions").select("*").eq("user_id", uid),
@@ -13,6 +13,8 @@ export const exportUserData = createServerFn({ method: "GET" })
         context.supabase.from("wrapup_tags").select("*").eq("user_id", uid),
         context.supabase.from("goals").select("*").eq("user_id", uid),
         context.supabase.from("planned_blocks").select("*").eq("user_id", uid),
+        context.supabase.from("evidence").select("*").eq("user_id", uid),
+        context.supabase.from("events").select("*").eq("user_id", uid),
       ]);
     return {
       exported_at: new Date().toISOString(),
@@ -23,6 +25,8 @@ export const exportUserData = createServerFn({ method: "GET" })
       wrapup_tags: wrapupTags.data ?? [],
       goals: goals.data ?? [],
       planned_blocks: plannedBlocks.data ?? [],
+      evidence: evidence.data ?? [],
+      events: events.data ?? [],
     };
   });
 
