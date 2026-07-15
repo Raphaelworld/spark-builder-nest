@@ -61,7 +61,18 @@ function SessionPage() {
     );
   }
   if (!active) return <SetupView />;
-  return <FocusView session={active} />;
+  return (
+    <FocusView
+      session={{
+        id: active.id,
+        task: active.task,
+        technique: active.technique as TechniqueId,
+        planned_minutes: active.planned_minutes,
+        started_at: active.started_at,
+        exam_mode: active.exam_mode,
+      }}
+    />
+  );
 }
 
 function SetupView() {
