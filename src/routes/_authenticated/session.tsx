@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Check, X, Pause } from "lucide-react";
+import { z } from "zod";
 import { AppShell } from "@/components/app-shell";
 import { TECHNIQUES, type TechniqueId } from "@/lib/techniques";
 import { activeSessionQueryOptions } from "@/lib/session-queries";
+import { goalsQueryOptions } from "@/lib/planner-queries";
 import {
   abandonSession,
   addCheckin,
@@ -13,9 +15,18 @@ import {
   startSession,
 } from "@/lib/sessions.functions";
 
+const sessionSearch = z.object({
+  task: z.string().optional(),
+  technique: z.enum(["pomodoro", "deep_work", "active_recall"]).optional(),
+  minutes: z.coerce.number().int().min(5).max(240).optional(),
+  goal_id: z.string().uuid().optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/session")({
+  validateSearch: (s) => sessionSearch.parse(s),
   loader: ({ context }) => {
     context.queryClient.ensureQueryData(activeSessionQueryOptions());
+    context.queryClient.ensureQueryData(goalsQueryOptions());
   },
   head: () => ({ meta: [{ title: "Focus session — Gobez" }] }),
   errorComponent: ({ error }) => (
