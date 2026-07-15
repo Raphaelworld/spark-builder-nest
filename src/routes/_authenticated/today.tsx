@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Flame, Play } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CoachCard } from "@/components/coach-card";
+import { EvidenceCard } from "@/components/evidence-card";
 import { OnboardingOverlay } from "@/components/onboarding-overlay";
 import {
   activeSessionQueryOptions,
@@ -14,6 +15,7 @@ import {
 } from "@/lib/planner-queries";
 import { profileQueryOptions } from "@/lib/profile-queries";
 import { insightsQueryOptions } from "@/lib/insights-queries";
+import { evidenceQueryOptions } from "@/lib/evidence-queries";
 
 export const Route = createFileRoute("/_authenticated/today")({
   loader: ({ context }) => {
@@ -23,6 +25,7 @@ export const Route = createFileRoute("/_authenticated/today")({
     context.queryClient.ensureQueryData(plannedBlocksQueryOptions());
     context.queryClient.ensureQueryData(profileQueryOptions());
     context.queryClient.ensureQueryData(insightsQueryOptions(30));
+    context.queryClient.ensureQueryData(evidenceQueryOptions());
   },
   head: () => ({
     meta: [{ title: "Today — Gobez" }],
