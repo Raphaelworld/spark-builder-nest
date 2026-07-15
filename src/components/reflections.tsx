@@ -11,6 +11,15 @@ import {
   saveWeeklyReview,
 } from "@/lib/reflections.functions";
 
+function MiniStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-lg bg-muted/50 p-2">
+      <p className="font-serif text-lg text-foreground">{value}</p>
+      <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
 function formatWeek(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   const end = new Date(d);
