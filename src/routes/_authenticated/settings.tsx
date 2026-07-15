@@ -29,6 +29,8 @@ function SettingsPage() {
   const qc = useQueryClient();
   const { data: profile } = useQuery(profileQueryOptions());
   const save = useServerFn(updateProfile);
+  const exportFn = useServerFn(exportUserData);
+  const deleteFn = useServerFn(deleteAccount);
 
   const [name, setName] = useState("");
   const [technique, setTechnique] = useState<TechniqueId>("pomodoro");
