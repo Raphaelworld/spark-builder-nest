@@ -178,6 +178,42 @@ function SetupView() {
             </div>
           </div>
 
+
+          {activeGoals.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-medium">
+                Goal <span className="text-muted-foreground">(optional)</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGoalId("")}
+                  className={`rounded-full border px-3 py-1.5 text-sm ${
+                    !goalId
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card hover:bg-accent"
+                  }`}
+                >
+                  None
+                </button>
+                {activeGoals.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setGoalId(g.id)}
+                    className={`rounded-full border px-3 py-1.5 text-sm ${
+                      goalId === g.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-card hover:bg-accent"
+                    }`}
+                  >
+                    {g.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="mb-2 flex items-baseline justify-between">
               <p className="text-sm font-medium">Duration</p>
@@ -204,7 +240,14 @@ function SetupView() {
             />
             <span className="text-sm">
               <span className="font-medium">Exam mode</span>
-              <span className="ml-2 text-muted-foreground">Suppress check-ins and nudges</span>
+              <span className="ml-2 text-muted-foreground">
+                Suppress check-ins and nudges
+              </span>
+              {deadlineSoon && (
+                <span className="mt-1 block text-xs text-primary">
+                  Your deadline is within a week — we turned this on for you.
+                </span>
+              )}
             </span>
           </label>
 
