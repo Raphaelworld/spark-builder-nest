@@ -115,25 +115,25 @@ function InsightsPage() {
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data.daily} margin={{ left: -20, right: 8, top: 8, bottom: 0 }}>
-                <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" vertical={false} />
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="day"
                   tickFormatter={(v) => formatDay(v)}
-                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}
                   minTickGap={20}
                 />
                 <YAxis
-                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                  tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}
                   width={40}
                 />
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--card)",
+                    border: "1px solid var(--border)",
                     borderRadius: 12,
                     fontSize: 12,
                   }}
@@ -143,7 +143,7 @@ function InsightsPage() {
                 <Line
                   type="monotone"
                   dataKey="minutes"
-                  stroke="hsl(var(--primary))"
+                  stroke="var(--primary)"
                   strokeWidth={2}
                   dot={false}
                   activeDot={{ r: 4 }}
@@ -199,7 +199,7 @@ function InsightsPage() {
                 <BarChart data={data.byHour} margin={{ left: -30, right: 0, top: 4, bottom: 0 }}>
                   <XAxis
                     dataKey="hour"
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 10 }}
                     tickLine={false}
                     axisLine={false}
                     interval={3}
@@ -208,8 +208,8 @@ function InsightsPage() {
                   <YAxis hide />
                   <Tooltip
                     contentStyle={{
-                      background: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
                       borderRadius: 12,
                       fontSize: 12,
                     }}
@@ -227,8 +227,8 @@ function InsightsPage() {
                           key={entry.hour}
                           fill={
                             inWindow && data.totals.sessions > 0
-                              ? "hsl(var(--primary))"
-                              : "hsl(var(--muted))"
+                              ? "var(--primary)"
+                              : "var(--muted)"
                           }
                         />
                       );
