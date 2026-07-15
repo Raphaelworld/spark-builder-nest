@@ -72,8 +72,9 @@ function TodayPage() {
             })}
           </p>
           <h1 className="font-serif text-4xl leading-tight text-foreground md:text-5xl">
-            Ready to focus?
+            {firstName ? `Ready to focus, ${firstName}?` : "Ready to focus?"}
           </h1>
+
         </header>
 
         <div className="flex flex-wrap items-center gap-3">
