@@ -52,6 +52,102 @@ export type Database = {
           },
         ]
       }
+      goals: {
+        Row: {
+          color: string
+          created_at: string
+          deadline: string | null
+          description: string | null
+          id: string
+          status: Database["public"]["Enums"]["goal_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["goal_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["goal_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      planned_blocks: {
+        Row: {
+          created_at: string
+          day_of_week: number
+          end_minute: number
+          goal_id: string | null
+          id: string
+          planned_minutes: number
+          session_id: string | null
+          start_minute: number
+          technique: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          day_of_week: number
+          end_minute: number
+          goal_id?: string | null
+          id?: string
+          planned_minutes?: number
+          session_id?: string | null
+          start_minute: number
+          technique?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number
+          end_minute?: number
+          goal_id?: string | null
+          id?: string
+          planned_minutes?: number
+          session_id?: string | null
+          start_minute?: number
+          technique?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planned_blocks_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "planned_blocks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           coach_tone: string
@@ -92,6 +188,7 @@ export type Database = {
           ended_at: string | null
           exam_mode: boolean
           focus_rating: number | null
+          goal_id: string | null
           id: string
           next_time_note: string | null
           planned_minutes: number
@@ -108,6 +205,7 @@ export type Database = {
           ended_at?: string | null
           exam_mode?: boolean
           focus_rating?: number | null
+          goal_id?: string | null
           id?: string
           next_time_note?: string | null
           planned_minutes?: number
@@ -124,6 +222,7 @@ export type Database = {
           ended_at?: string | null
           exam_mode?: boolean
           focus_rating?: number | null
+          goal_id?: string | null
           id?: string
           next_time_note?: string | null
           planned_minutes?: number
@@ -134,7 +233,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sessions_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wrapup_tags: {
         Row: {
@@ -180,6 +287,7 @@ export type Database = {
     }
     Enums: {
       checkin_kind: "auto" | "manual" | "stuck"
+      goal_status: "active" | "archived" | "completed"
       session_status: "active" | "completed" | "abandoned"
       wrapup_polarity: "worked" | "didnt"
     }
@@ -310,6 +418,7 @@ export const Constants = {
   public: {
     Enums: {
       checkin_kind: ["auto", "manual", "stuck"],
+      goal_status: ["active", "archived", "completed"],
       session_status: ["active", "completed", "abandoned"],
       wrapup_polarity: ["worked", "didnt"],
     },

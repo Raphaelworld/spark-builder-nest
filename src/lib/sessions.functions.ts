@@ -7,6 +7,7 @@ const startInput = z.object({
   technique: z.enum(["pomodoro", "deep_work", "active_recall"]),
   planned_minutes: z.number().int().min(5).max(180),
   exam_mode: z.boolean().default(false),
+  goal_id: z.string().uuid().nullable().optional(),
 });
 
 export const startSession = createServerFn({ method: "POST" })
@@ -28,6 +29,7 @@ export const startSession = createServerFn({ method: "POST" })
         technique: data.technique,
         planned_minutes: data.planned_minutes,
         exam_mode: data.exam_mode,
+        goal_id: data.goal_id ?? null,
         status: "active",
       })
       .select()

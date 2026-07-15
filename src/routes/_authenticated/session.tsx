@@ -3,9 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { Check, X, Pause } from "lucide-react";
+import { z } from "zod";
 import { AppShell } from "@/components/app-shell";
 import { TECHNIQUES, type TechniqueId } from "@/lib/techniques";
 import { activeSessionQueryOptions } from "@/lib/session-queries";
+import { goalsQueryOptions } from "@/lib/planner-queries";
 import {
   abandonSession,
   addCheckin,
@@ -13,9 +15,18 @@ import {
   startSession,
 } from "@/lib/sessions.functions";
 
+const sessionSearch = z.object({
+  task: z.string().optional(),
+  technique: z.enum(["pomodoro", "deep_work", "active_recall"]).optional(),
+  minutes: z.coerce.number().int().min(5).max(240).optional(),
+  goal_id: z.string().uuid().optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/session")({
+  validateSearch: (s) => sessionSearch.parse(s),
   loader: ({ context }) => {
     context.queryClient.ensureQueryData(activeSessionQueryOptions());
+    context.queryClient.ensureQueryData(goalsQueryOptions());
   },
   head: () => ({ meta: [{ title: "Focus session — Gobez" }] }),
   errorComponent: ({ error }) => (
@@ -78,15 +89,40 @@ function SessionPage() {
 function SetupView() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const search = Route.useSearch();
+  const { data: goals = [] } = useQuery(goalsQueryOptions());
+  const activeGoals = goals.filter((g) => g.status === "active");
   const start = useServerFn(startSession);
-  const [task, setTask] = useState("");
-  const [technique, setTechnique] = useState<TechniqueId>("pomodoro");
-  const [minutes, setMinutes] = useState(TECHNIQUES.pomodoro.defaultMinutes);
+  const [task, setTask] = useState(search.task ?? "");
+  const [technique, setTechnique] = useState<TechniqueId>(
+    search.technique ?? "pomodoro",
+  );
+  const [minutes, setMinutes] = useState(
+    search.minutes ?? TECHNIQUES.pomodoro.defaultMinutes,
+  );
+  const [goalId, setGoalId] = useState<string | "">(search.goal_id ?? "");
+  const selectedGoal = activeGoals.find((g) => g.id === goalId);
+  const deadlineSoon =
+    selectedGoal?.deadline &&
+    (new Date(selectedGoal.deadline).getTime() - Date.now()) /
+      (24 * 60 * 60 * 1000) <=
+      7;
   const [examMode, setExamMode] = useState(false);
+  useEffect(() => {
+    if (deadlineSoon) setExamMode(true);
+  }, [deadlineSoon]);
 
   const m = useMutation({
     mutationFn: () =>
-      start({ data: { task: task.trim(), technique, planned_minutes: minutes, exam_mode: examMode } }),
+      start({
+        data: {
+          task: task.trim(),
+          technique,
+          planned_minutes: minutes,
+          exam_mode: examMode,
+          goal_id: goalId || null,
+        },
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["activeSession"] });
     },
@@ -142,6 +178,42 @@ function SetupView() {
             </div>
           </div>
 
+
+          {activeGoals.length > 0 && (
+            <div>
+              <p className="mb-2 text-sm font-medium">
+                Goal <span className="text-muted-foreground">(optional)</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setGoalId("")}
+                  className={`rounded-full border px-3 py-1.5 text-sm ${
+                    !goalId
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card hover:bg-accent"
+                  }`}
+                >
+                  None
+                </button>
+                {activeGoals.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => setGoalId(g.id)}
+                    className={`rounded-full border px-3 py-1.5 text-sm ${
+                      goalId === g.id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-card hover:bg-accent"
+                    }`}
+                  >
+                    {g.title}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="mb-2 flex items-baseline justify-between">
               <p className="text-sm font-medium">Duration</p>
@@ -168,7 +240,14 @@ function SetupView() {
             />
             <span className="text-sm">
               <span className="font-medium">Exam mode</span>
-              <span className="ml-2 text-muted-foreground">Suppress check-ins and nudges</span>
+              <span className="ml-2 text-muted-foreground">
+                Suppress check-ins and nudges
+              </span>
+              {deadlineSoon && (
+                <span className="mt-1 block text-xs text-primary">
+                  Your deadline is within a week — we turned this on for you.
+                </span>
+              )}
             </span>
           </label>
 
