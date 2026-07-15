@@ -106,30 +106,8 @@ function TodayPage() {
           </div>
         </button>
 
-        {showCoach && (
-          <div className="relative rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <button
-              onClick={() => setShowCoach(false)}
-              aria-label="Dismiss"
-              className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <div className="flex items-start gap-3 pr-6">
-              <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-success/15 text-success">
-                <Sparkles className="h-4 w-4" aria-hidden />
-              </span>
-              <div>
-                <p className="text-sm font-medium text-foreground">A gentle nudge</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {summary?.lastNote
-                    ? `Last time you noted: "${summary.lastNote}"`
-                    : "Even 25 minutes of focused work is a real win. Start small — momentum follows."}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        <CoachCard />
+
 
         <section className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-5">
