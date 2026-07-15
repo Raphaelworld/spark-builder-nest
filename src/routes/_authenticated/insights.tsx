@@ -300,6 +300,12 @@ function InsightsPage() {
           </div>
         </section>
 
+        {/* Reflections */}
+        <section className="grid gap-4 md:grid-cols-2">
+          <WeeklyReviewCard />
+          <MonthlyPulseCard />
+        </section>
+
         {/* Notes */}
         <section className="rounded-2xl border border-border bg-card p-5">
           <h2 className="mb-3 font-serif text-xl">Notes to future you</h2>
