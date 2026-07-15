@@ -217,6 +217,50 @@ function SettingsPage() {
             Sign out
           </button>
         </section>
+
+        <section className="rounded-2xl border border-border bg-card p-6">
+          <h2 className="font-serif text-xl">Your data</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Download everything Gobez has stored for you as a JSON file.
+          </p>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="mt-3 rounded-full border border-border px-4 py-2 text-sm hover:bg-accent disabled:opacity-50"
+          >
+            {exporting ? "Preparing…" : "Export my data"}
+          </button>
+        </section>
+
+        <section className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6">
+          <h2 className="font-serif text-xl text-destructive">Danger zone</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Permanently delete your account, sessions, goals, and plans. This
+            cannot be undone. Type <span className="font-mono">DELETE</span> to
+            confirm.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <input
+              value={confirmDelete}
+              onChange={(e) => setConfirmDelete(e.target.value)}
+              placeholder="DELETE"
+              className="rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <button
+              onClick={() => deleteMutation.mutate()}
+              disabled={confirmDelete !== "DELETE" || deleteMutation.isPending}
+              className="rounded-full bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground disabled:opacity-50"
+            >
+              {deleteMutation.isPending ? "Deleting…" : "Delete account"}
+            </button>
+          </div>
+          {deleteMutation.isError && (
+            <p className="mt-2 text-sm text-destructive">
+              {(deleteMutation.error as Error).message}
+            </p>
+          )}
+        </section>
+
       </div>
     </AppShell>
   );
