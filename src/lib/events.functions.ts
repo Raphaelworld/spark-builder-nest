@@ -14,7 +14,7 @@ export const logEvent = createServerFn({ method: "POST" })
     const { error } = await context.supabase.from("events").insert({
       user_id: context.userId,
       name: data.name,
-      payload: data.payload ?? {},
+      payload: (data.payload ?? {}) as never,
     });
     if (error) throw new Error(error.message);
     return { ok: true };
