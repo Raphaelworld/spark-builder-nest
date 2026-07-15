@@ -120,13 +120,13 @@ export const completeSession = createServerFn({ method: "POST" })
       const { error: tErr } = await context.supabase.from("wrapup_tags").insert(tags);
       if (tErr) throw new Error(tErr.message);
     }
+    await context.supabase.from("events").insert({
+      user_id: context.userId,
+      name: "session_completed",
+      payload: { session_id: data.session_id, focus_rating: data.focus_rating, worked_count: data.worked.length, didnt_count: data.didnt.length } as never,
+    });
     return { ok: true };
   });
-
-const abandonInput = z.object({
-  session_id: z.string().uuid(),
-  reason: z.string().max(60).optional(),
-});
 
 export const abandonSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
