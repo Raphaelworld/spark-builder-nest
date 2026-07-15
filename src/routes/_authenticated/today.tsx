@@ -7,11 +7,17 @@ import {
   activeSessionQueryOptions,
   todaySummaryQueryOptions,
 } from "@/lib/session-queries";
+import {
+  goalsQueryOptions,
+  plannedBlocksQueryOptions,
+} from "@/lib/planner-queries";
 
 export const Route = createFileRoute("/_authenticated/today")({
   loader: ({ context }) => {
     context.queryClient.ensureQueryData(activeSessionQueryOptions());
     context.queryClient.ensureQueryData(todaySummaryQueryOptions());
+    context.queryClient.ensureQueryData(goalsQueryOptions());
+    context.queryClient.ensureQueryData(plannedBlocksQueryOptions());
   },
   head: () => ({
     meta: [{ title: "Today — Gobez" }],
