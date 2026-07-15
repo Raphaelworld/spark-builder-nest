@@ -35,6 +35,11 @@ export const startSession = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
+    await context.supabase.from("events").insert({
+      user_id: context.userId,
+      name: "session_started",
+      payload: { session_id: row.id, technique: data.technique, planned_minutes: data.planned_minutes, exam_mode: data.exam_mode, goal_id: data.goal_id ?? null } as never,
+    });
     return row;
   });
 
@@ -115,6 +120,11 @@ export const completeSession = createServerFn({ method: "POST" })
       const { error: tErr } = await context.supabase.from("wrapup_tags").insert(tags);
       if (tErr) throw new Error(tErr.message);
     }
+    await context.supabase.from("events").insert({
+      user_id: context.userId,
+      name: "session_completed",
+      payload: { session_id: data.session_id, focus_rating: data.focus_rating, worked_count: data.worked.length, didnt_count: data.didnt.length } as never,
+    });
     return { ok: true };
   });
 
@@ -137,6 +147,11 @@ export const abandonSession = createServerFn({ method: "POST" })
       .eq("id", data.session_id)
       .eq("user_id", context.userId);
     if (error) throw new Error(error.message);
+    await context.supabase.from("events").insert({
+      user_id: context.userId,
+      name: "session_abandoned",
+      payload: { session_id: data.session_id, reason: data.reason ?? null } as never,
+    });
     return { ok: true };
   });
 
