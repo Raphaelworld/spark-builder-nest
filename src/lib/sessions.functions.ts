@@ -128,6 +128,11 @@ export const completeSession = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const abandonInput = z.object({
+  session_id: z.string().uuid(),
+  reason: z.string().max(60).optional(),
+});
+
 export const abandonSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => abandonInput.parse(d))
