@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Flame, Sparkles, Play, X } from "lucide-react";
-import { useState } from "react";
+import { Flame, Play } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { CoachCard } from "@/components/coach-card";
+import { OnboardingOverlay } from "@/components/onboarding-overlay";
 import {
   activeSessionQueryOptions,
   todaySummaryQueryOptions,
@@ -11,6 +12,8 @@ import {
   goalsQueryOptions,
   plannedBlocksQueryOptions,
 } from "@/lib/planner-queries";
+import { profileQueryOptions } from "@/lib/profile-queries";
+import { insightsQueryOptions } from "@/lib/insights-queries";
 
 export const Route = createFileRoute("/_authenticated/today")({
   loader: ({ context }) => {
@@ -18,6 +21,8 @@ export const Route = createFileRoute("/_authenticated/today")({
     context.queryClient.ensureQueryData(todaySummaryQueryOptions());
     context.queryClient.ensureQueryData(goalsQueryOptions());
     context.queryClient.ensureQueryData(plannedBlocksQueryOptions());
+    context.queryClient.ensureQueryData(profileQueryOptions());
+    context.queryClient.ensureQueryData(insightsQueryOptions(30));
   },
   head: () => ({
     meta: [{ title: "Today — Gobez" }],
@@ -33,10 +38,10 @@ export const Route = createFileRoute("/_authenticated/today")({
 });
 
 function TodayPage() {
-  const [showCoach, setShowCoach] = useState(true);
   const navigate = useNavigate();
   const { data: active } = useQuery(activeSessionQueryOptions());
   const { data: summary } = useQuery(todaySummaryQueryOptions());
+  const { data: profile } = useQuery(profileQueryOptions());
   const { data: goals = [] } = useQuery(goalsQueryOptions());
   const { data: blocks = [] } = useQuery(plannedBlocksQueryOptions());
   const activeGoals = goals.filter((g) => g.status === "active");
@@ -52,6 +57,8 @@ function TodayPage() {
         (a, b) =>
           a.day_of_week - b.day_of_week || a.start_minute - b.start_minute,
       )[0];
+  const firstName = profile?.display_name?.split(" ")[0]?.trim();
+
 
   return (
     <AppShell>
