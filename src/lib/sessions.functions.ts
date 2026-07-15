@@ -35,6 +35,11 @@ export const startSession = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
+    await context.supabase.from("events").insert({
+      user_id: context.userId,
+      name: "session_started",
+      payload: { session_id: row.id, technique: data.technique, planned_minutes: data.planned_minutes, exam_mode: data.exam_mode, goal_id: data.goal_id ?? null } as never,
+    });
     return row;
   });
 
