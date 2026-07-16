@@ -148,12 +148,12 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <SessionMiniBar />
 
-      <main className="md:pl-20 pb-24 md:pb-8">
+      <main className="md:pl-20 md:pb-8 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <div className="mx-auto max-w-3xl px-4 py-6 md:py-10">{children}</div>
       </main>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-4 border-t border-border bg-background/95 backdrop-blur md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-4 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
         aria-label="Primary"
       >
         {NAV.map(({ to, label, icon: Icon }) => {
