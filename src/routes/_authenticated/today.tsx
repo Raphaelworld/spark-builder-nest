@@ -92,6 +92,8 @@ function TodayPage() {
 
         <button
           onClick={() => navigate({ to: "/session" })}
+          data-track="cta_start_session_click"
+          data-track-payload={JSON.stringify({ active: !!active, location: "today_hero" })}
           className="group relative block w-full overflow-hidden rounded-2xl bg-primary p-8 text-left text-primary-foreground shadow-sm transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:p-10"
         >
           <div className="flex items-center justify-between gap-4">
