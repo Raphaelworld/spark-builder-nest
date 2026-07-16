@@ -1,0 +1,1 @@
+CREATE POLICY "Users manage own wrapup_tags (update)" ON public.wrapup_tags FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
