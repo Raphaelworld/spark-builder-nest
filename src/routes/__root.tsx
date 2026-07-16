@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AnalyticsProvider } from "@/components/analytics-provider";
+import { trackError } from "@/lib/analytics";
 
 function NotFoundComponent() {
   return (
@@ -39,6 +41,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    trackError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
 
   return (
@@ -127,6 +130,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <AnalyticsProvider />
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
     </QueryClientProvider>
