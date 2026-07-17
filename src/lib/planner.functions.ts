@@ -47,6 +47,36 @@ export const createPlannedBlock = createServerFn({ method: "POST" })
     return row;
   });
 
+const updateInput = z.object({
+  id: z.string().uuid(),
+  patch: z
+    .object({
+      title: z.string().min(1).max(120).optional(),
+      goal_id: z.string().uuid().nullable().optional(),
+      day_of_week: z.number().int().min(0).max(6).optional(),
+      start_minute: z.number().int().min(0).max(1439).optional(),
+      end_minute: z.number().int().min(1).max(1440).optional(),
+      planned_minutes: z.number().int().min(5).max(240).optional(),
+      technique: z.enum(["pomodoro", "deep_work", "active_recall"]).optional(),
+    })
+    .strict(),
+});
+
+export const updatePlannedBlock = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d) => updateInput.parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: row, error } = await context.supabase
+      .from("planned_blocks")
+      .update(data.patch)
+      .eq("id", data.id)
+      .eq("user_id", context.userId)
+      .select()
+      .single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
 export const deletePlannedBlock = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: z.string().uuid() }).parse(d))

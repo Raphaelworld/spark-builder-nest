@@ -2,112 +2,294 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Play, Download } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { useHotkeys } from "react-hotkeys-hook";
+import { Download, Plus, Command as CommandIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { Button } from "@/components/ui/button";
 import {
   goalsQueryOptions,
   plannedBlocksQueryOptions,
+  unscheduledTasksQueryOptions,
 } from "@/lib/planner-queries";
 import {
   createPlannedBlock,
   deletePlannedBlock,
+  updatePlannedBlock,
 } from "@/lib/planner.functions";
-import { TECHNIQUES, type TechniqueId } from "@/lib/techniques";
+import {
+  createUnscheduledTask,
+  deleteUnscheduledTask,
+} from "@/lib/unscheduled.functions";
+import { logEvent } from "@/lib/events.functions";
+import { WeekGrid, type PlannedBlock } from "@/components/planner/week-grid";
+import { TaskTray } from "@/components/planner/task-tray";
+import { BlockEditor, type BlockEditorValue } from "@/components/planner/block-editor";
+import { PlannerPalette } from "@/components/planner/planner-palette";
+import {
+  DAYS,
+  PX_PER_MIN,
+  SNAP_MIN,
+  START_HOUR,
+  TOTAL_MINUTES,
+  clamp,
+  jsDayToIdx,
+  snap,
+  type TechniqueId,
+} from "@/components/planner/constants";
 
 export const Route = createFileRoute("/_authenticated/planner")({
   loader: ({ context }) => {
     context.queryClient.ensureQueryData(plannedBlocksQueryOptions());
     context.queryClient.ensureQueryData(goalsQueryOptions());
+    context.queryClient.ensureQueryData(unscheduledTasksQueryOptions());
   },
   head: () => ({
     meta: [
       { title: "Planner — Gobez" },
       {
         name: "description",
-        content: "Place study blocks on your week and start sessions from them.",
+        content: "Drag focus blocks onto your week, capture intents, and start sessions from your plan.",
       },
     ],
   }),
   errorComponent: ({ error }) => (
     <AppShell>
-      <p role="alert" className="text-destructive">
-        {error.message}
-      </p>
+      <p role="alert" className="text-destructive">{error.message}</p>
     </AppShell>
   ),
   component: PlannerPage,
 });
-
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-// Grid runs 6:00 -> 22:00 in 30 minute rows.
-const START_HOUR = 6;
-const END_HOUR = 22;
-const ROW_MINUTES = 30;
-const TOTAL_ROWS = ((END_HOUR - START_HOUR) * 60) / ROW_MINUTES;
-const ROW_PX = 28;
-
-function fmt(mins: number) {
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
-  const ampm = h >= 12 ? "pm" : "am";
-  const hh = ((h + 11) % 12) + 1;
-  return `${hh}:${String(m).padStart(2, "0")}${ampm}`;
-}
-
-// Map JS Date.getDay() (0=Sun) → our 0..6 Mon..Sun index
-function jsDayToIdx(d: number) {
-  return (d + 6) % 7;
-}
 
 function PlannerPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const { data: blocks = [] } = useQuery(plannedBlocksQueryOptions());
   const { data: goals = [] } = useQuery(goalsQueryOptions());
-  const activeGoals = goals.filter((g) => g.status === "active");
-  const [draft, setDraft] = useState<{
-    day: number;
-    startMin: number;
-  } | null>(null);
+  const { data: tasks = [] } = useQuery(unscheduledTasksQueryOptions());
+
+  const [editor, setEditor] = useState<{ open: boolean; value: BlockEditorValue | null }>({
+    open: false,
+    value: null,
+  });
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const createFn = useServerFn(createPlannedBlock);
+  const updateFn = useServerFn(updatePlannedBlock);
   const deleteFn = useServerFn(deletePlannedBlock);
+  const createTaskFn = useServerFn(createUnscheduledTask);
+  const deleteTaskFn = useServerFn(deleteUnscheduledTask);
+  const logFn = useServerFn(logEvent);
 
-  const create = useMutation({
-    mutationFn: (payload: {
-      title: string;
-      goal_id: string | null;
-      day_of_week: number;
-      start_minute: number;
-      end_minute: number;
-      planned_minutes: number;
-      technique: TechniqueId;
-    }) => createFn({ data: payload }),
+  function track(name: string, meta?: Record<string, unknown>) {
+    logFn({ data: { name, payload: meta ?? {} } }).catch(() => {});
+  }
+
+  const invalidateAll = () => {
+    qc.invalidateQueries({ queryKey: ["plannedBlocks"] });
+    qc.invalidateQueries({ queryKey: ["unscheduledTasks"] });
+  };
+
+  const createMut = useMutation({
+    mutationFn: (v: BlockEditorValue) =>
+      createFn({
+        data: {
+          title: v.title,
+          goal_id: v.goal_id,
+          day_of_week: v.day_of_week,
+          start_minute: v.start_minute,
+          end_minute: v.start_minute + v.planned_minutes,
+          planned_minutes: v.planned_minutes,
+          technique: v.technique,
+        },
+      }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["plannedBlocks"] });
-      setDraft(null);
+      invalidateAll();
+      setEditor({ open: false, value: null });
     },
   });
 
-  const remove = useMutation({
-    mutationFn: (id: string) => deleteFn({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["plannedBlocks"] }),
+  const updateMut = useMutation({
+    mutationFn: (v: { id: string; patch: Partial<Omit<BlockEditorValue, "id">> & { end_minute?: number } }) =>
+      updateFn({ data: v as never }),
+    // optimistic update
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: ["plannedBlocks"] });
+      const prev = qc.getQueryData<PlannedBlock[]>(["plannedBlocks"]);
+      qc.setQueryData<PlannedBlock[]>(["plannedBlocks"], (list) =>
+        (list ?? []).map((b) => (b.id === v.id ? { ...b, ...v.patch } as PlannedBlock : b)),
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(["plannedBlocks"], ctx.prev);
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ["plannedBlocks"] }),
   });
 
-  const todayIdx = jsDayToIdx(new Date().getDay());
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    onSuccess: invalidateAll,
+  });
+
+  const createTaskMut = useMutation({
+    mutationFn: (v: { title: string; technique: TechniqueId; planned_minutes: number }) =>
+      createTaskFn({ data: v }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["unscheduledTasks"] }),
+  });
+  const deleteTaskMut = useMutation({
+    mutationFn: (id: string) => deleteTaskFn({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["unscheduledTasks"] }),
+  });
+
   const totalPlanned = useMemo(
     () => blocks.reduce((s, b) => s + b.planned_minutes, 0),
     [blocks],
   );
 
+  // Sensors: small distance so click-open still works and pointer down on empty grid does not begin block drag.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  );
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over, delta } = event;
+    if (!over) return;
+    const overData = over.data.current as { kind: string; dayIdx: number } | undefined;
+    if (overData?.kind !== "day") return;
+    const activeData = active.data.current as
+      | { kind: "block"; block: PlannedBlock }
+      | { kind: "task"; task: { id: string; title: string; goal_id: string | null; technique: string; planned_minutes: number } }
+      | undefined;
+    if (!activeData) return;
+
+    const targetDay = overData.dayIdx;
+
+    if (activeData.kind === "block") {
+      const b = activeData.block;
+      const newStart = clamp(
+        snap(b.start_minute + delta.y / PX_PER_MIN),
+        0,
+        START_HOUR * 60 + TOTAL_MINUTES - b.planned_minutes,
+      );
+      if (newStart === b.start_minute && targetDay === b.day_of_week) return;
+      updateMut.mutate({
+        id: b.id,
+        patch: {
+          day_of_week: targetDay,
+          start_minute: newStart,
+          end_minute: newStart + b.planned_minutes,
+        },
+      });
+      track("planner_block_moved");
+      return;
+    }
+
+    if (activeData.kind === "task") {
+      const t = activeData.task;
+      // Compute drop y relative to column
+      const activeRect = active.rect.current.translated;
+      const overRect = over.rect;
+      let startMin = START_HOUR * 60;
+      if (activeRect && overRect) {
+        const relY = activeRect.top - overRect.top;
+        startMin = clamp(
+          snap(START_HOUR * 60 + relY / PX_PER_MIN),
+          START_HOUR * 60,
+          START_HOUR * 60 + TOTAL_MINUTES - t.planned_minutes,
+        );
+      }
+      // Create block and remove task
+      createFn({
+        data: {
+          title: t.title,
+          goal_id: t.goal_id,
+          day_of_week: targetDay,
+          start_minute: startMin,
+          end_minute: startMin + t.planned_minutes,
+          planned_minutes: t.planned_minutes,
+          technique: t.technique as TechniqueId,
+        },
+      }).then(() => {
+        deleteTaskFn({ data: { id: t.id } }).finally(() => {
+          invalidateAll();
+        });
+      });
+      track("planner_tray_task_placed");
+    }
+  }
+
+  function openCreate(day: number, startMin: number, endMin: number) {
+    const duration = Math.max(SNAP_MIN, endMin - startMin);
+    setEditor({
+      open: true,
+      value: {
+        title: "",
+        goal_id: null,
+        day_of_week: day,
+        start_minute: startMin,
+        planned_minutes: duration,
+        technique: "pomodoro",
+      },
+    });
+  }
+
+  function openEdit(b: PlannedBlock) {
+    setEditor({
+      open: true,
+      value: {
+        id: b.id,
+        title: b.title,
+        goal_id: b.goal_id,
+        day_of_week: b.day_of_week,
+        start_minute: b.start_minute,
+        planned_minutes: b.planned_minutes,
+        technique: b.technique as TechniqueId,
+      },
+    });
+  }
+
+  function startBlock(b: PlannedBlock) {
+    track("planner_block_started");
+    navigate({
+      to: "/session",
+      search: {
+        task: b.title,
+        technique: b.technique as TechniqueId,
+        minutes: b.planned_minutes,
+        goal_id: b.goal_id ?? undefined,
+      } as never,
+    });
+  }
+
+  function duplicateBlock(b: PlannedBlock) {
+    const newStart = Math.min(
+      START_HOUR * 60 + TOTAL_MINUTES - b.planned_minutes,
+      b.start_minute + b.planned_minutes,
+    );
+    createFn({
+      data: {
+        title: b.title,
+        goal_id: b.goal_id,
+        day_of_week: b.day_of_week,
+        start_minute: newStart,
+        end_minute: newStart + b.planned_minutes,
+        planned_minutes: b.planned_minutes,
+        technique: b.technique as TechniqueId,
+      },
+    }).finally(invalidateAll);
+    track("planner_block_created", { source: "duplicate" });
+  }
+
   function exportIcs() {
-    const lines = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//Gobez//Planner//EN",
-    ];
+    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Gobez//Planner//EN"];
     const now = new Date();
-    // Start of ISO week (Mon)
     const monday = new Date(now);
     monday.setDate(now.getDate() - jsDayToIdx(now.getDay()));
     monday.setHours(0, 0, 0, 0);
@@ -117,11 +299,7 @@ function PlannerPage() {
       start.setMinutes(b.start_minute);
       const end = new Date(start);
       end.setMinutes(start.getMinutes() + b.planned_minutes);
-      const fmtDt = (d: Date) =>
-        d
-          .toISOString()
-          .replace(/[-:]/g, "")
-          .replace(/\.\d{3}/, "");
+      const fmtDt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
       lines.push(
         "BEGIN:VEVENT",
         `UID:${b.id}@gobez`,
@@ -142,339 +320,163 @@ function PlannerPage() {
     URL.revokeObjectURL(url);
   }
 
+  // Hotkeys
+  useHotkeys("mod+k", (e) => {
+    e.preventDefault();
+    setPaletteOpen(true);
+    track("planner_palette_opened");
+  });
+  useHotkeys("n", () => {
+    const d = new Date();
+    openCreate(
+      jsDayToIdx(d.getDay()),
+      snap(d.getHours() * 60 + d.getMinutes()),
+      snap(d.getHours() * 60 + d.getMinutes()) + 25,
+    );
+  }, { enableOnFormTags: false });
+
   return (
-    <AppShell>
-      <div className="space-y-6">
-        <header className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h1 className="font-serif text-3xl md:text-4xl">Planner</h1>
-            <p className="text-sm text-muted-foreground">
-              Tap a slot to plan a block. Start a session from it when the time
-              comes.
-            </p>
-          </div>
-          <div className="flex items-center gap-3 text-sm">
-            <span className="text-muted-foreground">
-              {totalPlanned} min planned this week
-            </span>
-            <button
-              onClick={exportIcs}
-              disabled={blocks.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Download className="h-3.5 w-3.5" aria-hidden /> Export .ics
-            </button>
-          </div>
-        </header>
-
-        <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-          <div className="min-w-[720px]">
-            {/* Day headers */}
-            <div className="grid grid-cols-[3rem_repeat(7,minmax(0,1fr))] border-b border-border">
-              <div />
-              {DAYS.map((d, i) => (
-                <div
-                  key={d}
-                  className={`px-2 py-2 text-center text-xs font-medium ${
-                    i === todayIdx ? "text-primary" : "text-muted-foreground"
-                  }`}
-                >
-                  {d}
-                </div>
-              ))}
+    <AppShell wide>
+      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <div className="space-y-5">
+          <header className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className="font-serif text-3xl md:text-4xl">Planner</h1>
+              <p className="text-sm text-muted-foreground">
+                Drag to plan. Drop tasks from the tray. Press{" "}
+                <kbd className="rounded border border-border bg-muted px-1 text-[10px]">⌘K</kbd> for quick add.
+              </p>
             </div>
-
-            {/* Grid body */}
-            <div className="relative grid grid-cols-[3rem_repeat(7,minmax(0,1fr))]">
-              {/* time labels */}
-              <div>
-                {Array.from({ length: END_HOUR - START_HOUR }).map((_, h) => (
-                  <div
-                    key={h}
-                    style={{ height: ROW_PX * 2 }}
-                    className="border-b border-border pr-1 pt-0.5 text-right text-[10px] text-muted-foreground"
-                  >
-                    {fmt((START_HOUR + h) * 60)}
-                  </div>
-                ))}
-              </div>
-
-              {DAYS.map((_, dayIdx) => (
-                <div
-                  key={dayIdx}
-                  className="relative border-l border-border"
-                  style={{ height: ROW_PX * TOTAL_ROWS }}
-                >
-                  {/* row grid lines and click targets */}
-                  {Array.from({ length: TOTAL_ROWS }).map((_, r) => {
-                    const startMin = START_HOUR * 60 + r * ROW_MINUTES;
-                    return (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() =>
-                          setDraft({ day: dayIdx, startMin })
-                        }
-                        aria-label={`Add block on ${DAYS[dayIdx]} at ${fmt(startMin)}`}
-                        className={`block w-full border-b border-border/60 transition-colors hover:bg-primary/5 ${
-                          r % 2 === 1 ? "border-border" : "border-border/50"
-                        }`}
-                        style={{ height: ROW_PX }}
-                      />
-                    );
-                  })}
-
-                  {/* rendered blocks */}
-                  {blocks
-                    .filter((b) => b.day_of_week === dayIdx)
-                    .map((b) => {
-                      const top =
-                        ((b.start_minute - START_HOUR * 60) / ROW_MINUTES) *
-                        ROW_PX;
-                      const height = Math.max(
-                        ROW_PX - 2,
-                        (b.planned_minutes / ROW_MINUTES) * ROW_PX - 2,
-                      );
-                      const goal = goals.find((g) => g.id === b.goal_id);
-                      return (
-                        <div
-                          key={b.id}
-                          style={{ top, height }}
-                          className="absolute inset-x-1 rounded-md border border-primary/40 bg-primary/10 p-1.5 text-[11px] shadow-sm"
-                        >
-                          <div className="flex items-start justify-between gap-1">
-                            <p className="line-clamp-2 font-medium text-foreground">
-                              {b.title}
-                            </p>
-                            <div className="flex shrink-0 gap-0.5">
-                              <button
-                                onClick={() =>
-                                  navigate({
-                                    to: "/session",
-                                    search: {
-                                      task: b.title,
-                                      technique: b.technique as TechniqueId,
-                                      minutes: b.planned_minutes,
-                                      goal_id: b.goal_id ?? undefined,
-                                    } as never,
-                                  })
-                                }
-                                aria-label="Start session"
-                                className="rounded p-0.5 text-primary hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                              >
-                                <Play className="h-3 w-3" />
-                              </button>
-                              <button
-                                onClick={() => remove.mutate(b.id)}
-                                aria-label="Delete block"
-                                className="rounded p-0.5 text-muted-foreground hover:bg-destructive/15 hover:text-destructive focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
-                          </div>
-                          {goal && (
-                            <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
-                              {goal.title}
-                            </p>
-                          )}
-                          <p className="mt-0.5 text-[10px] text-muted-foreground">
-                            {fmt(b.start_minute)} · {b.planned_minutes}m
-                          </p>
-                        </div>
-                      );
-                    })}
-                </div>
-              ))}
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-muted-foreground">{totalPlanned} min planned</span>
+              <Button variant="outline" size="sm" onClick={() => setPaletteOpen(true)}>
+                <CommandIcon className="mr-1.5 h-3.5 w-3.5" />Quick add
+              </Button>
+              <Button variant="outline" size="sm" onClick={exportIcs} disabled={blocks.length === 0}>
+                <Download className="mr-1.5 h-3.5 w-3.5" />Export
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  const d = new Date();
+                  const now = snap(d.getHours() * 60 + d.getMinutes());
+                  openCreate(jsDayToIdx(d.getDay()), now, now + 25);
+                }}
+              >
+                <Plus className="mr-1.5 h-3.5 w-3.5" />New block
+              </Button>
             </div>
+          </header>
+
+          <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+            <TaskTray
+              tasks={tasks}
+              goals={goals}
+              onCreate={(v) => {
+                createTaskMut.mutate(v);
+                track("planner_tray_task_created");
+              }}
+              onDelete={(id) => deleteTaskMut.mutate(id)}
+            />
+
+            <WeekGrid
+              blocks={blocks as PlannedBlock[]}
+              goals={goals}
+              onCreateAtSlot={openCreate}
+              onOpenBlock={openEdit}
+              onStartBlock={startBlock}
+              onDuplicateBlock={duplicateBlock}
+              onDeleteBlock={(id) => deleteMut.mutate(id)}
+              onMoveBlock={(id, day, startMin) => {
+                const b = blocks.find((x) => x.id === id);
+                if (!b) return;
+                updateMut.mutate({
+                  id,
+                  patch: {
+                    day_of_week: day,
+                    start_minute: startMin,
+                    end_minute: startMin + b.planned_minutes,
+                  },
+                });
+              }}
+              onResizeBlock={(id, plannedMinutes) => {
+                const b = blocks.find((x) => x.id === id);
+                if (!b) return;
+                updateMut.mutate({
+                  id,
+                  patch: {
+                    planned_minutes: plannedMinutes,
+                    end_minute: b.start_minute + plannedMinutes,
+                  },
+                });
+                track("planner_block_resized");
+              }}
+            />
           </div>
         </div>
+      </DndContext>
 
-        {draft && (
-          <BlockForm
-            day={draft.day}
-            startMin={draft.startMin}
-            goals={activeGoals}
-            onCancel={() => setDraft(null)}
-            pending={create.isPending}
-            error={create.error ? (create.error as Error).message : null}
-            onSubmit={(v) =>
-              create.mutate({
+      <BlockEditor
+        open={editor.open}
+        onOpenChange={(o) => setEditor((s) => ({ ...s, open: o }))}
+        value={editor.value}
+        goals={goals}
+        pending={createMut.isPending || updateMut.isPending}
+        error={
+          createMut.error
+            ? (createMut.error as Error).message
+            : updateMut.error
+              ? (updateMut.error as Error).message
+              : null
+        }
+        onDelete={(id) => {
+          deleteMut.mutate(id);
+          setEditor({ open: false, value: null });
+        }}
+        onSubmit={(v) => {
+          if (v.id) {
+            updateMut.mutate({
+              id: v.id,
+              patch: {
                 title: v.title,
                 goal_id: v.goal_id,
-                day_of_week: draft.day,
-                start_minute: draft.startMin,
-                end_minute: draft.startMin + v.planned_minutes,
+                day_of_week: v.day_of_week,
+                start_minute: v.start_minute,
                 planned_minutes: v.planned_minutes,
                 technique: v.technique,
-              })
-            }
-          />
-        )}
-      </div>
+                end_minute: v.start_minute + v.planned_minutes,
+              },
+            });
+            setEditor({ open: false, value: null });
+          } else {
+            createMut.mutate(v);
+            track("planner_block_created", { source: "editor" });
+          }
+        }}
+      />
+
+      <PlannerPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        goals={goals}
+        onSubmit={(p) => {
+          createFn({
+            data: {
+              title: p.title,
+              goal_id: p.goal_id,
+              day_of_week: p.day_of_week,
+              start_minute: p.start_minute,
+              end_minute: p.start_minute + p.planned_minutes,
+              planned_minutes: p.planned_minutes,
+              technique: p.technique,
+            },
+          }).finally(invalidateAll);
+          track("planner_block_created", { source: "palette" });
+        }}
+      />
     </AppShell>
   );
 }
 
-function BlockForm({
-  day,
-  startMin,
-  goals,
-  onCancel,
-  onSubmit,
-  pending,
-  error,
-}: {
-  day: number;
-  startMin: number;
-  goals: Array<{ id: string; title: string; color: string }>;
-  onCancel: () => void;
-  onSubmit: (v: {
-    title: string;
-    goal_id: string | null;
-    planned_minutes: number;
-    technique: TechniqueId;
-  }) => void;
-  pending: boolean;
-  error: string | null;
-}) {
-  const [title, setTitle] = useState("");
-  const [goalId, setGoalId] = useState<string | "">("");
-  const [technique, setTechnique] = useState<TechniqueId>("pomodoro");
-  const [minutes, setMinutes] = useState(TECHNIQUES.pomodoro.defaultMinutes);
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-background/70 p-4 backdrop-blur md:items-center"
-      role="dialog"
-      aria-label="Plan a block"
-      onClick={onCancel}
-    >
-      <form
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (!title.trim()) return;
-          onSubmit({
-            title: title.trim(),
-            goal_id: goalId || null,
-            planned_minutes: minutes,
-            technique,
-          });
-        }}
-        className="w-full max-w-md space-y-4 rounded-2xl border border-border bg-card p-5 shadow-lg"
-      >
-        <div>
-          <p className="font-serif text-xl">Plan a block</p>
-          <p className="text-xs text-muted-foreground">
-            {DAYS[day]} · {fmt(startMin)}
-          </p>
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">What</label>
-          <input
-            autoFocus
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Problem set 4"
-            maxLength={120}
-            className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-        </div>
-        {goals.length > 0 && (
-          <div>
-            <label className="mb-1 block text-sm font-medium">
-              Goal (optional)
-            </label>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setGoalId("")}
-                className={`rounded-full border px-3 py-1 text-xs ${
-                  !goalId
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-background hover:bg-accent"
-                }`}
-              >
-                None
-              </button>
-              {goals.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  onClick={() => setGoalId(g.id)}
-                  className={`rounded-full border px-3 py-1 text-xs ${
-                    goalId === g.id
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-background hover:bg-accent"
-                  }`}
-                >
-                  {g.title}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        <div>
-          <label className="mb-1 block text-sm font-medium">Technique</label>
-          <div className="grid grid-cols-3 gap-2">
-            {Object.values(TECHNIQUES).map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => {
-                  setTechnique(t.id);
-                  setMinutes(t.defaultMinutes);
-                }}
-                className={`rounded-lg border px-2 py-2 text-xs ${
-                  technique === t.id
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-background hover:bg-accent"
-                }`}
-              >
-                {t.name}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div>
-          <div className="mb-1 flex items-baseline justify-between">
-            <span className="text-sm font-medium">Duration</span>
-            <span className="text-sm text-muted-foreground">{minutes} min</span>
-          </div>
-          <input
-            type="range"
-            min={15}
-            max={120}
-            step={5}
-            value={minutes}
-            onChange={(e) => setMinutes(Number(e.target.value))}
-            className="w-full accent-[color:var(--primary)]"
-          />
-        </div>
-        {error && (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        )}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={!title.trim() || pending}
-            className="flex-[2] inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Plus className="h-4 w-4" aria-hidden />
-            {pending ? "Adding…" : "Add to week"}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-}
+// silence unused
+void DAYS;
