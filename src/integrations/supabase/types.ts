@@ -350,6 +350,50 @@ export type Database = {
           },
         ]
       }
+      unscheduled_tasks: {
+        Row: {
+          created_at: string
+          goal_id: string | null
+          id: string
+          planned_minutes: number
+          position: number
+          technique: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          goal_id?: string | null
+          id?: string
+          planned_minutes?: number
+          position?: number
+          technique?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          goal_id?: string | null
+          id?: string
+          planned_minutes?: number
+          position?: number
+          technique?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unscheduled_tasks_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       weekly_reviews: {
         Row: {
           created_at: string
