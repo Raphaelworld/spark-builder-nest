@@ -88,7 +88,7 @@ function PlannerPage() {
   const logFn = useServerFn(logEvent);
 
   function track(name: string, meta?: Record<string, unknown>) {
-    logFn({ data: { name, meta: meta ?? {} } }).catch(() => {});
+    logFn({ data: { name, payload: meta ?? {} } }).catch(() => {});
   }
 
   const invalidateAll = () => {
