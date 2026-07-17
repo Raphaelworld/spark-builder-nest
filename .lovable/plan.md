@@ -1,73 +1,95 @@
+# Planner refactor — Calendar-native
 
-# Gobez — Execution Plan
+Turn `/planner` from a tap-to-open-modal grid into a real planning surface: drag to create, drag to move, resize from the edge, capture tasks in a side tray and drop them onto the week, and plan by keyboard through a command palette. The current warm editorial look (cream/ink/terracotta, DM Serif + DM Sans) stays; only interaction and layout change.
 
-A daily focus companion built around one core loop (the Focus Session), with Planner, Goals, Insights, and a rule-based Coach orbiting it. Built on React + TanStack Start + Tailwind + shadcn/ui, backed by Lovable Cloud (Supabase under the hood).
+## What you'll be able to do
 
-## Guiding principles (from the PRD)
-- One core loop, never a library of forms. Max ~2 inputs visible per step; prefer chips, sliders, steppers.
-- Plain, warm second-person copy — no "SRL", "metacognition", "pillar", "tool N".
-- Warm editorial aesthetic: cream paper (#faf8f3), ink text, terracotta (#a14e33), forest green (#4d6b58), DM Sans, rounded-lg, soft shadows.
-- WCAG AA contrast, keyboard reachable, `prefers-reduced-motion` respected.
-- Timer is timestamp-derived (survives refresh / tab sleep).
-- Every table has RLS scoped to `auth.uid()`; one active session per user enforced by a partial unique index; ≤3 active goals.
+- **Drag on empty grid** to create a block sized to the drag distance; release opens a side Sheet (desktop) / bottom Drawer (mobile) pre-filled with day, start, duration.
+- **Drag a block** to another day/time to reschedule. Snap to 15-min increments.
+- **Resize a block** by dragging its bottom edge to change duration.
+- **Right-click / long-press a block** for Start session, Duplicate, Move to next week, Delete.
+- **Task tray** on the left: capture "unscheduled intents" (title + goal + technique + duration). Drag a card onto the grid to place it; it disappears from the tray.
+- **Command palette (⌘K)**: type "Plan calc review Tue 9am 50m deep work" → block appears on grid with a soft animation.
+- **Keyboard**: `n` new (opens Sheet at current time), `⌘K` palette, `Delete` removes selected block, `↑/↓` nudges start by 15m, `Shift+↑/↓` resizes.
+- **Now-line** across today's column, auto-scrolls into view on load.
+- **Per-day totals** in each day header; weekly total remains in the page header.
+- **Goal color inheritance**: block background/border tint from the linked goal's color.
+- **Motion**: spring on drop, layout animation on move/resize, staggered fade-in on load.
 
-## Phase 0 — Foundation & design system
-- Set up design tokens in `src/styles.css` (cream/ink/terracotta/forest/mustard, DM Sans via `<link>` in `__root.tsx`), light + dark, rounded-lg radii, soft shadows.
-- App shell with 5 destinations: **Today, Planner, Goals, Insights** (bottom tab bar mobile / slim left rail desktop) + avatar menu → Settings.
-- Placeholder Today screen (big "Start focus session", streak chip, dismissible coach card).
-- Real head metadata + Gobez title/description in `__root.tsx`.
-- AA contrast pass on all tokens.
+## New/changed surfaces
 
-## Phase 1 — Lovable Cloud, auth, profiles
-- Enable Lovable Cloud.
-- Email/password + Google auth; signed-out landing page with value prop and sign-in CTA; signed-in users land on Today.
-- `profiles` table auto-populated by a trigger on `auth.users` insert; RLS user-scoped.
-- Route protection using the `_authenticated` layout gate.
+```text
+/planner
+├── Header (title, weekly total, Export .ics, "+ New" button)
+├── Layout: [Task tray | Week grid]
+│   ├── Task tray (desktop rail, mobile bottom sheet)
+│   │   └── Unscheduled cards (draggable)
+│   └── Week grid
+│       ├── Day headers with per-day totals + today highlight
+│       ├── Now-line indicator
+│       ├── Time column
+│       └── 7 day columns (droppable, click-drag to create)
+│           └── Blocks (draggable, resizable, context menu)
+├── Sheet/Drawer editor (create + edit)
+└── Command palette (⌘K, global on planner)
+```
 
-## Phase 2 — Focus Session core loop (the product)
-Schema: `sessions`, `checkins`, `wrapup_tags` (RLS, plus partial unique index `sessions(user_id) WHERE status='active'`).
+## Technical section
 
-- **Setup (<30s):** one-line task input with recent-task suggestions, technique picker as cards (Pomodoro 25/5, Deep work 50/10, Active recall), duration stepper, collapsed pre-flight checklist that remembers last state. Starting inserts an `active` session.
-- **Focus:** full-screen timer computed from `started_at` (accurate across refresh/tab sleep), pause/extend/end-early, interval-midpoint check-ins (confidence 1–5 slider, optional note, "I'm stuck" link). Persistent mini-bar on all other screens while active.
-- **Wrap-up (<60s):** 3-card swipe flow — rating slider, worked/didn't chips + optional line, "one thing for next time". Marks session `completed`, brief celebrate animation (gated on reduced-motion), returns Today. End-early asks one chip-based "why" and stores `abandoned`.
-- Wire Today to real data: streak, today's focus minutes, last `next_time_note` as seed suggestion.
+**Libraries to add**
+- `@dnd-kit/core` + `@dnd-kit/modifiers` — drag/drop for blocks and tray cards. Accessible, keyboard support built in.
+- `framer-motion` — layout transitions on move/resize/drop and tray reordering.
+- `cmdk` — command palette.
+- `chrono-node` — natural-language date/time parsing for the palette.
+- `react-hotkeys-hook` — keyboard shortcuts scoped to the planner route.
 
-## Phase 3 — Planner & Goals
-- `goals` (≤3 active, mastery-phrasing hint, archive not delete). Each card shows auto-computed sessions and focus minutes tagged to it.
-- `planned_blocks`: tap-and-drag week grid, "Start session" from a block (pre-fills setup, links block↔session), planned-vs-actual at end of week, ICS export.
-- Session setup gains goal-tag chips; **Exam mode** toggle appears when a tagged goal deadline is within 7 days (adds one calm-and-plan step before timer).
+Shadcn components to add if not present: `sheet`, `drawer`, `context-menu`, `command`, `tooltip`, `progress`.
 
-## Phase 4 — Insights & rituals
-- Insights tab: focus-minutes-per-day bars (2 weeks), avg check-in confidence trend, technique effectiveness, compact expandable session history.
-- `weekly_reviews`: Sunday card pre-filled with computed stats (sessions, focus minutes, planned-vs-actual, best moment); user answers two short prompts. Stats stored as jsonb.
-- `pulses`: monthly 6-slider check, trend chart in Insights. Prompted, never required.
+**Database**
+- New table `public.unscheduled_tasks` (user_id, title, goal_id nullable, technique, planned_minutes, position int for tray order, timestamps). Full RLS + GRANTs per project rules. Delete row when placed on grid (turned into a `planned_blocks` row).
 
-## Phase 5 — Coach & onboarding
-- 90-second onboarding: one tappable question per screen → sets `default_technique`, `default_duration`, `coach_tone`, `onboarding_completed_at`. Retake from Settings.
-- Rule-based coach moments:
-  - **Reframe** when check-in confidence ≤2 or wrap-up rating ≤2 (thought chips → reframe chips).
-  - **Stuck** helper composes a specific question (trying / expected / happened) with copy + mailto.
-  - **Evidence bank** (`evidence` table): high-rated "what worked" chips saved; surfaced on Today coach card before similar sessions.
-- Optional: `coach-boost` edge function using Lovable AI Gateway (Gemini) with rule-based fallback.
+**Server functions** (new `src/lib/unscheduled.functions.ts`)
+- `listUnscheduledTasks`, `createUnscheduledTask`, `updateUnscheduledTask`, `deleteUnscheduledTask`, `reorderUnscheduledTasks`.
+- Extend `src/lib/planner.functions.ts` with `updatePlannedBlock` (day, start_minute, planned_minutes, end_minute) — currently only create + delete exist.
 
-## Phase 6 — Polish & launch
-- Settings behind avatar: display name, appearance (light/dark/system), retake onboarding, export all data as JSON, delete account (cascades all rows).
-- `events` table (insert-only RLS) logging: `session_started`, `checkin_logged`, `session_completed`, `session_abandoned`, `review_completed`, `onboarding_completed`.
-- Full QA sweep: AA contrast in both themes, keyboard-only session loop, aria-live on timer, no screen with >2 stacked labeled inputs, 375px one-handed thumb-reach check.
+**Client architecture**
+- Split `src/routes/_authenticated/planner.tsx` into:
+  - `planner.tsx` — route, data wiring, DndContext, hotkeys, palette host.
+  - `components/planner/week-grid.tsx` — grid + now-line + drag-to-create.
+  - `components/planner/planner-block.tsx` — draggable/resizable block with context menu.
+  - `components/planner/task-tray.tsx` — unscheduled list, draggable cards, quick-add.
+  - `components/planner/block-editor.tsx` — Sheet/Drawer form (replaces current modal `BlockForm`).
+  - `components/planner/planner-palette.tsx` — cmdk + chrono-node parser.
+  - `lib/planner-parse.ts` — pure parser (task title + day + time + minutes + technique + optional goal by fuzzy match).
 
-## Technical notes
-- **Routing:** TanStack Start file routes. `_authenticated` layout gate wraps Today/Planner/Goals/Insights/Settings; landing + auth are public. Session runs full-screen at `/session` with a sticky mini-bar rendered from the app shell when an active session exists.
-- **Data:** TanStack Query as canonical read shape (`ensureQueryData` in loaders, `useSuspenseQuery` in components) via `requireSupabaseAuth` server functions.
-- **Timer:** derive remaining time from `started_at + planned_minutes − pausedElapsed` on each animation frame; no server tick.
-- **Active session invariant:** partial unique index in Postgres + optimistic UI guard.
-- **Grants:** every `public.<table>` migration includes `GRANT SELECT, INSERT, UPDATE, DELETE ... TO authenticated; GRANT ALL ... TO service_role;` before enabling RLS and writing policies.
-- **Accessibility:** focus-visible rings on all interactive elements, `aria-live="polite"` for timer state, `prefers-reduced-motion` gates celebrate/transition animations.
-- **Out of scope (v2.0):** collaboration, instructor dashboards, native apps, push, Behavior Chain analyzer, offline/PWA, any Firestore migration.
+**Interaction details**
+- Snap = 15 minutes. Grid row stays 30-min visual but drag math snaps to 15.
+- Drag-to-create uses a `pointerdown` on the day column, tracks pointer Y, renders a translucent ghost block, opens the editor Sheet on `pointerup` with computed start/duration.
+- Resize handle: 6px hit area on block bottom edge; separate dnd-kit sensor. Enforce min 15m, max 240m.
+- Move: dnd-kit `useDraggable` on the whole block minus the resize handle; day columns are `useDroppable`. On drop, call `updatePlannedBlock` optimistically with React Query mutation + rollback on error.
+- Now-line: `useEffect` interval every 60s; only rendered for today's column; auto-scroll on mount if between 6am–10pm.
+- Editor Sheet on ≥md breakpoint (`side="right"`, width ~420px), Drawer on `<md`. Same form used for create and edit.
+- Context menu items call the same mutations as toolbar buttons.
 
-## Suggested delivery order
-P0 shell → P1 auth → **P2 session loop (pin)** → P3 planner+goals → P4 insights → P5 coach → P6 polish. If time-boxed, ship P0–P2 + P6 as MVP and iterate P3–P5.
+**Analytics**
+- Emit events via existing `logEvent`: `planner_block_created` (source: drag/tap/tray/palette), `planner_block_moved`, `planner_block_resized`, `planner_block_started`, `planner_palette_opened`, `planner_tray_task_created`, `planner_tray_task_placed`.
 
-## What I'd like to confirm before building
-1. Confirm the app name is **Gobez** (used in title, metadata, landing).
-2. OK to enable **Lovable Cloud** in Phase 1 (required for auth, DB, RLS, edge functions)?
-3. Start with Phase 0 (shell + design system) on approval, one phase per turn?
+**Accessibility**
+- Every drag interaction has a keyboard equivalent (arrow-key nudge, `Enter` to open editor, `Delete` to remove).
+- Blocks are `role="button"` with `aria-label` describing day/time/duration/title.
+- Sheet/Drawer manage focus trap via shadcn primitives.
+- Respect `prefers-reduced-motion` — disable spring/layout transitions.
+
+**Out of scope**
+- Multi-week view, recurring blocks, external calendar sync (Google/Apple), collaborative planning, AI-suggested schedules. All can follow later.
+
+## Rollout
+
+1. Add libraries + shadcn components; add `unscheduled_tasks` migration and `updatePlannedBlock` server fn.
+2. Extract block/editor components; swap modal → Sheet/Drawer. No behavior change yet.
+3. Add drag-to-move + resize + optimistic mutations + motion.
+4. Add drag-to-create on empty grid.
+5. Add task tray (list, create, drag onto grid).
+6. Add command palette + hotkeys.
+7. Add now-line, per-day totals, goal-colored blocks, context menu.
+8. Analytics events + a11y pass + reduced-motion check.
