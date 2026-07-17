@@ -336,7 +336,7 @@ function PlannerPage() {
   }, { enableOnFormTags: false });
 
   return (
-    <AppShell>
+    <AppShell wide>
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <div className="space-y-5">
           <header className="flex flex-wrap items-end justify-between gap-3">

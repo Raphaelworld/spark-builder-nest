@@ -76,7 +76,7 @@ function SessionMiniBar() {
   );
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { dark, toggle } = useTheme();
 
@@ -149,7 +149,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <SessionMiniBar />
 
       <main className="md:pl-20 md:pb-8 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-        <div className="mx-auto max-w-3xl px-4 py-6 md:py-10">{children}</div>
+        <div className={`mx-auto px-4 py-6 md:py-10 ${wide ? "max-w-6xl" : "max-w-3xl"}`}>
+          {children}
+        </div>
       </main>
 
       <nav
