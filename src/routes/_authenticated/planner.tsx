@@ -347,23 +347,32 @@ function PlannerPage() {
                 <kbd className="rounded border border-border bg-muted px-1 text-[10px]">⌘K</kbd> for quick add.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <span className="text-muted-foreground">{totalPlanned} min planned</span>
-              <Button variant="outline" size="sm" onClick={() => setPaletteOpen(true)}>
-                <CommandIcon className="mr-1.5 h-3.5 w-3.5" />Quick add
-              </Button>
-              <Button variant="outline" size="sm" onClick={exportIcs} disabled={blocks.length === 0}>
-                <Download className="mr-1.5 h-3.5 w-3.5" />Export
-              </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-sm">
+                <span className="text-muted-foreground">{totalPlanned} min planned</span>
+                <Button variant="outline" size="sm" onClick={() => setPaletteOpen(true)}>
+                  <CommandIcon className="mr-1.5 h-3.5 w-3.5" />Quick add
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const d = new Date();
+                    const now = snap(d.getHours() * 60 + d.getMinutes());
+                    openCreate(jsDayToIdx(d.getDay()), now, now + 25);
+                  }}
+                >
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />New block
+                </Button>
+              </div>
               <Button
-                size="sm"
-                onClick={() => {
-                  const d = new Date();
-                  const now = snap(d.getHours() * 60 + d.getMinutes());
-                  openCreate(jsDayToIdx(d.getDay()), now, now + 25);
-                }}
+                variant="outline"
+                size="icon"
+                onClick={exportIcs}
+                disabled={blocks.length === 0}
+                aria-label="Export plan"
+                title="Export plan"
               >
-                <Plus className="mr-1.5 h-3.5 w-3.5" />New block
+                <Download className="h-4 w-4" />
               </Button>
             </div>
           </header>
