@@ -65,7 +65,7 @@ function SessionMiniBar() {
   return (
     <Link
       to="/session"
-      className="fixed left-1/2 top-14 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-card px-4 py-2 text-sm shadow-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:top-4 md:left-24 md:translate-x-0"
+      className="fixed left-1/2 top-14 z-40 flex -translate-x-1/2 items-center gap-3 rounded-full border border-border bg-card px-4 py-2 text-sm shadow-md hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:top-16"
     >
       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary">
         <Timer className="h-3.5 w-3.5" aria-hidden />
@@ -76,58 +76,24 @@ function SessionMiniBar() {
   );
 }
 
+function Logo() {
+  return (
+    <Link to="/today" className="flex items-center gap-2">
+      <span className="font-serif text-2xl text-primary">G</span>
+      <span className="font-serif text-xl text-foreground">Gobez</span>
+    </Link>
+  );
+}
+
 export function AppShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { dark, toggle } = useTheme();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-20 flex-col border-r border-border bg-sidebar px-2 py-6 md:flex">
-        <Link to="/today" className="mb-8 flex items-center justify-center">
-          <span className="font-serif text-2xl text-primary">G</span>
-        </Link>
-        <nav className="flex flex-1 flex-col items-center gap-2" aria-label="Primary">
-          {NAV.map(({ to, label, icon: Icon }) => {
-            const active = pathname === to || pathname.startsWith(to + "/");
-            return (
-              <Link
-                key={to}
-                to={to}
-                className={`flex w-full flex-col items-center gap-1 rounded-lg px-2 py-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                  active
-                    ? "bg-accent text-primary"
-                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-                aria-current={active ? "page" : undefined}
-              >
-                <Icon className="h-5 w-5" aria-hidden />
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
-        <div className="flex flex-col items-center gap-2">
-          <button
-            onClick={toggle}
-            aria-label="Toggle theme"
-            className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-          </button>
-          <Link
-            to="/settings"
-            aria-label="Settings"
-            className="rounded-full bg-primary/10 p-2 text-primary hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <User className="h-5 w-5" />
-          </Link>
-        </div>
-      </aside>
-
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-background/80 px-4 py-3 backdrop-blur md:hidden">
-        <Link to="/today" className="font-serif text-xl text-primary">
-          Gobez
-        </Link>
+      {/* Mobile top header */}
+      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur md:hidden">
+        <Logo />
         <div className="flex items-center gap-1">
           <button
             onClick={toggle}
@@ -146,14 +112,58 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
         </div>
       </header>
 
+      {/* Desktop top navigation */}
+      <header className="fixed inset-x-0 top-0 z-30 hidden h-16 items-center justify-between border-b border-border bg-background/90 px-6 backdrop-blur md:flex">
+        <Logo />
+
+        <nav className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1" aria-label="Primary">
+          {NAV.map(({ to, label, icon: Icon }) => {
+            const active = pathname === to || pathname.startsWith(to + "/");
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  active
+                    ? "bg-accent text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                }`}
+                aria-current={active ? "page" : undefined}
+              >
+                <Icon className="h-4 w-4" aria-hidden />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggle}
+            aria-label="Toggle theme"
+            className="rounded-lg p-2 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </button>
+          <Link
+            to="/settings"
+            aria-label="Settings"
+            className="rounded-full bg-primary/10 p-2 text-primary hover:bg-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <User className="h-5 w-5" />
+          </Link>
+        </div>
+      </header>
+
       <SessionMiniBar />
 
-      <main className="md:pl-20 md:pb-8 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <main className="md:pt-16 md:pb-8 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         <div className={`mx-auto px-4 py-6 md:py-10 ${wide ? "max-w-6xl" : "max-w-3xl"}`}>
           {children}
         </div>
       </main>
 
+      {/* Mobile bottom navigation */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-4 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
         aria-label="Primary"
