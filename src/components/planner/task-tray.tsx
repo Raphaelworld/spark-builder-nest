@@ -33,7 +33,7 @@ export function TaskTray({
   return (
     <aside className="rounded-2xl border border-border bg-card p-3">
       <div className="mb-2 flex items-baseline justify-between">
-        <h2 className="font-serif text-lg">Unscheduled</h2>
+        <h2 className="font-serif text-lg">To Dos</h2>
         <span className="text-xs text-muted-foreground">Drag onto week</span>
       </div>
       <form
