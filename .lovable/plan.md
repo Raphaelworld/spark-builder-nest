@@ -1,95 +1,79 @@
-# Planner refactor — Calendar-native
 
-Turn `/planner` from a tap-to-open-modal grid into a real planning surface: drag to create, drag to move, resize from the edge, capture tasks in a side tray and drop them onto the week, and plan by keyboard through a command palette. The current warm editorial look (cream/ink/terracotta, DM Serif + DM Sans) stays; only interaction and layout change.
+## Goal
 
-## What you'll be able to do
+Replace the current warm-editorial palette in `src/styles.css` with the exact color tokens from the uploaded DESIGN.md. No new components, no typography changes, no motion/utility patterns, no Garden. Pillar accents (Forest/Persimmon/Cobalt/Mustard) are used decoratively — they carry no semantic meaning in Gobez.
 
-- **Drag on empty grid** to create a block sized to the drag distance; release opens a side Sheet (desktop) / bottom Drawer (mobile) pre-filled with day, start, duration.
-- **Drag a block** to another day/time to reschedule. Snap to 15-min increments.
-- **Resize a block** by dragging its bottom edge to change duration.
-- **Right-click / long-press a block** for Start session, Duplicate, Move to next week, Delete.
-- **Task tray** on the left: capture "unscheduled intents" (title + goal + technique + duration). Drag a card onto the grid to place it; it disappears from the tray.
-- **Command palette (⌘K)**: type "Plan calc review Tue 9am 50m deep work" → block appears on grid with a soft animation.
-- **Keyboard**: `n` new (opens Sheet at current time), `⌘K` palette, `Delete` removes selected block, `↑/↓` nudges start by 15m, `Shift+↑/↓` resizes.
-- **Now-line** across today's column, auto-scrolls into view on load.
-- **Per-day totals** in each day header; weekly total remains in the page header.
-- **Goal color inheritance**: block background/border tint from the linked goal's color.
-- **Motion**: spring on drop, layout animation on move/resize, staggered fade-in on load.
+## Scope
 
-## New/changed surfaces
+**In:** color tokens only, both light and dark modes, mapped through Tailwind v4's `@theme inline` so utilities like `bg-paper`, `text-ink`, `bg-forest-3`, `text-persimmon`, `border-cobalt`, `bg-terracotta` all exist.
 
-```text
-/planner
-├── Header (title, weekly total, Export .ics, "+ New" button)
-├── Layout: [Task tray | Week grid]
-│   ├── Task tray (desktop rail, mobile bottom sheet)
-│   │   └── Unscheduled cards (draggable)
-│   └── Week grid
-│       ├── Day headers with per-day totals + today highlight
-│       ├── Now-line indicator
-│       ├── Time column
-│       └── 7 day columns (droppable, click-drag to create)
-│           └── Blocks (draggable, resizable, context menu)
-├── Sheet/Drawer editor (create + edit)
-└── Command palette (⌘K, global on planner)
+**Out:** fonts (keep DM Sans / DM Serif Display), surface hierarchy scale, `.card-hover` / `.warm-callout` / focus-ring / skeleton / film-grain utilities, motion tiers, garden tokens, component refactors.
+
+## Changes
+
+### 1. `src/styles.css` — token rewrite
+
+Under `:root`, replace the current OKLCH values with the DESIGN.md hex values (converted, kept as hex for fidelity):
+
+- Base: `--paper #FFFDF9`, `--cream #FAF7F2`, `--ink #2C241D`, `--headline #1E1814`, `--muted-foreground #8B7E6F`
+- Forest: `--forest #3D5A46`, `--forest-2 #5A7A64`, `--forest-3 #EBF2ED`
+- Persimmon: `--persimmon #C2795C`, `--persimmon-2 #D4957A`, `--persimmon-3 #FAF0EB`
+- Cobalt: `--cobalt #5B739C`, `--cobalt-2 #7A8FB3`, `--cobalt-3 #EEF1F6`
+- Mustard: `--mustard #B8943E`, `--mustard-2 #D0AE5A`, `--mustard-3 #F9F4E8`
+- Brand: `--terracotta #C2795C` (reuse persimmon hue for CTA), `--deep-teal #2F5D62`
+
+Under `.dark`, apply the dark-mode column verbatim.
+
+### 2. Remap shadcn semantic tokens
+
+Keep the existing shadcn variable names (`--background`, `--foreground`, `--primary`, `--card`, `--border`, `--ring`, `--destructive`, `--success`, `--warning`, `--accent`, `--muted`, sidebar tokens, chart tokens) so no component breaks. Point them at the new palette:
+
+- `--background` → `--paper`, `--foreground` → `--ink`
+- `--card` → `--paper` (light) / `#252320` cream-dark (dark)
+- `--primary` → `--terracotta`, `--primary-foreground` → paper
+- `--secondary` / `--muted` / `--accent` → cream + persimmon-3 tints
+- `--border` / `--input` → warm hairline derived from ink at low alpha
+- `--ring` → terracotta
+- `--success` → forest, `--warning` → mustard, `--destructive` keep current red-family but retune to sit on the new paper
+- Charts: `--chart-1..5` → persimmon, forest, cobalt, mustard, deep-teal (decorative variety)
+- Sidebar tokens → cream / ink pair
+
+### 3. Extend `@theme inline` to publish the new utilities
+
+Add the new color entries so Tailwind generates the classes the DESIGN.md promises even though we're only using them incidentally:
+
+```css
+@theme inline {
+  --color-paper: var(--paper);
+  --color-cream: var(--cream);
+  --color-ink: var(--ink);
+  --color-headline: var(--headline);
+  --color-forest: var(--forest);
+  --color-forest-2: var(--forest-2);
+  --color-forest-3: var(--forest-3);
+  /* …persimmon, cobalt, mustard 1/2/3… */
+  --color-terracotta: var(--terracotta);
+  --color-deep-teal: var(--deep-teal);
+}
 ```
 
-## Technical section
+This yields `bg-paper`, `text-ink`, `bg-forest-3`, `text-persimmon`, `border-cobalt`, `bg-terracotta`, etc., alongside the existing shadcn utilities. No component code changes required.
 
-**Libraries to add**
-- `@dnd-kit/core` + `@dnd-kit/modifiers` — drag/drop for blocks and tray cards. Accessible, keyboard support built in.
-- `framer-motion` — layout transitions on move/resize/drop and tray reordering.
-- `cmdk` — command palette.
-- `chrono-node` — natural-language date/time parsing for the palette.
-- `react-hotkeys-hook` — keyboard shortcuts scoped to the planner route.
+### 4. Verify contrast
 
-Shadcn components to add if not present: `sheet`, `drawer`, `context-menu`, `command`, `tooltip`, `progress`.
+Spot-check AA on the new pairs actually used by shadcn semantics:
+- `--ink` on `--paper` (body)
+- `--terracotta` (primary) foreground on paper — if it fails, darken `--primary` to a slightly deeper terracotta while keeping the token name.
+- `--muted-foreground` on `--paper` and on `--cream`.
+- Dark mode equivalents.
 
-**Database**
-- New table `public.unscheduled_tasks` (user_id, title, goal_id nullable, technique, planned_minutes, position int for tray order, timestamps). Full RLS + GRANTs per project rules. Delete row when placed on grid (turned into a `planned_blocks` row).
+If any pair fails, adjust only the shadcn semantic mapping (not the DESIGN.md base tokens).
 
-**Server functions** (new `src/lib/unscheduled.functions.ts`)
-- `listUnscheduledTasks`, `createUnscheduledTask`, `updateUnscheduledTask`, `deleteUnscheduledTask`, `reorderUnscheduledTasks`.
-- Extend `src/lib/planner.functions.ts` with `updatePlannedBlock` (day, start_minute, planned_minutes, end_minute) — currently only create + delete exist.
+## Verification
 
-**Client architecture**
-- Split `src/routes/_authenticated/planner.tsx` into:
-  - `planner.tsx` — route, data wiring, DndContext, hotkeys, palette host.
-  - `components/planner/week-grid.tsx` — grid + now-line + drag-to-create.
-  - `components/planner/planner-block.tsx` — draggable/resizable block with context menu.
-  - `components/planner/task-tray.tsx` — unscheduled list, draggable cards, quick-add.
-  - `components/planner/block-editor.tsx` — Sheet/Drawer form (replaces current modal `BlockForm`).
-  - `components/planner/planner-palette.tsx` — cmdk + chrono-node parser.
-  - `lib/planner-parse.ts` — pure parser (task title + day + time + minutes + technique + optional goal by fuzzy match).
+- `bun run tsc`-equivalent typecheck (runs automatically).
+- Preview: skim `/`, `/auth`, `/today`, `/planner`, `/goals`, `/insights`, `/settings` in both light and dark to confirm nothing regressed visually and the palette shifted to the new warm/pillar tones.
 
-**Interaction details**
-- Snap = 15 minutes. Grid row stays 30-min visual but drag math snaps to 15.
-- Drag-to-create uses a `pointerdown` on the day column, tracks pointer Y, renders a translucent ghost block, opens the editor Sheet on `pointerup` with computed start/duration.
-- Resize handle: 6px hit area on block bottom edge; separate dnd-kit sensor. Enforce min 15m, max 240m.
-- Move: dnd-kit `useDraggable` on the whole block minus the resize handle; day columns are `useDroppable`. On drop, call `updatePlannedBlock` optimistically with React Query mutation + rollback on error.
-- Now-line: `useEffect` interval every 60s; only rendered for today's column; auto-scroll on mount if between 6am–10pm.
-- Editor Sheet on ≥md breakpoint (`side="right"`, width ~420px), Drawer on `<md`. Same form used for create and edit.
-- Context menu items call the same mutations as toolbar buttons.
+## Out of scope for later
 
-**Analytics**
-- Emit events via existing `logEvent`: `planner_block_created` (source: drag/tap/tray/palette), `planner_block_moved`, `planner_block_resized`, `planner_block_started`, `planner_palette_opened`, `planner_tray_task_created`, `planner_tray_task_placed`.
-
-**Accessibility**
-- Every drag interaction has a keyboard equivalent (arrow-key nudge, `Enter` to open editor, `Delete` to remove).
-- Blocks are `role="button"` with `aria-label` describing day/time/duration/title.
-- Sheet/Drawer manage focus trap via shadcn primitives.
-- Respect `prefers-reduced-motion` — disable spring/layout transitions.
-
-**Out of scope**
-- Multi-week view, recurring blocks, external calendar sync (Google/Apple), collaborative planning, AI-suggested schedules. All can follow later.
-
-## Rollout
-
-1. Add libraries + shadcn components; add `unscheduled_tasks` migration and `updatePlannedBlock` server fn.
-2. Extract block/editor components; swap modal → Sheet/Drawer. No behavior change yet.
-3. Add drag-to-move + resize + optimistic mutations + motion.
-4. Add drag-to-create on empty grid.
-5. Add task tray (list, create, drag onto grid).
-6. Add command palette + hotkeys.
-7. Add now-line, per-day totals, goal-colored blocks, context menu.
-8. Analytics events + a11y pass + reduced-motion check.
+If you later want the pillar accents to carry meaning (per-technique or per-goal), or want the surface scale / motion tiers / Garden system, that's a separate pass on top of this palette swap.
