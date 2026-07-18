@@ -1,79 +1,51 @@
-
 ## Goal
 
-Replace the current warm-editorial palette in `src/styles.css` with the exact color tokens from the uploaded DESIGN.md. No new components, no typography changes, no motion/utility patterns, no Garden. Pillar accents (Forest/Persimmon/Cobalt/Mustard) are used decoratively — they carry no semantic meaning in Gobez.
+Replace the current terracotta/persimmon-based primary theme with the GlobalLogic brand palette:
+- Orange `#F37037` (primary)
+- Black `#000000`
+- White `#FFFFFF`
+- Light Grey `#E6E7E8`
+
+This drives logo, buttons, icons, links, focus rings, active nav, CTA, chart-1, and sidebar primary — everything that currently reads "terracotta".
 
 ## Scope
 
-**In:** color tokens only, both light and dark modes, mapped through Tailwind v4's `@theme inline` so utilities like `bg-paper`, `text-ink`, `bg-forest-3`, `text-persimmon`, `border-cobalt`, `bg-terracotta` all exist.
+**In:** color token swap only, in `src/styles.css`. Both light and dark modes. No component code changes — everything already reads through semantic tokens (`--primary`, `--ring`, `bg-primary`, etc.).
 
-**Out:** fonts (keep DM Sans / DM Serif Display), surface hierarchy scale, `.card-hover` / `.warm-callout` / focus-ring / skeleton / film-grain utilities, motion tiers, garden tokens, component refactors.
+**Out:** typography, layout, spacing, pillar accents used decoratively in charts/goal colors (Forest / Cobalt / Mustard stay as chart variety). Logo mark stays as-is (it inherits `--primary`).
 
-## Changes
+## Changes to `src/styles.css`
 
-### 1. `src/styles.css` — token rewrite
+### `:root` (light)
+- `--terracotta: #F37037` (was `#B26A4E`) — the single change that cascades to `--primary`, `--ring`, `--sidebar-primary`, `--chart-1`-adjacent usage.
+- `--persimmon: #F37037`, `--persimmon-2: #F58A5A`, `--persimmon-3: #FEEDE3` — retune the persimmon ramp to the GlobalLogic orange family so `bg-accent` / `bg-persimmon-*` stay coherent.
+- `--cream: #F5F5F6` (slightly cooler, derived from Light Grey `#E6E7E8` lightened) so secondary surfaces align with the new neutral.
+- `--muted: var(--cream)` unchanged mapping; `--muted-foreground` retuned to `#5A5A5C` for AA on the cooler cream.
+- `--border`, `--input`: keep alpha-on-ink but verify on white.
+- `--ink` stays `#2C241D` (near-black reads fine with orange); optionally shift to pure `#111` if the user wants a stricter black. Not doing that unless asked.
+- `--chart-1: var(--persimmon)` → now GlobalLogic orange. Chart 2–5 keep Forest/Cobalt/Mustard/Deep-teal for legible multi-series.
 
-Under `:root`, replace the current OKLCH values with the DESIGN.md hex values (converted, kept as hex for fidelity):
+### `.dark`
+- `--terracotta: #F37037` (same brand orange; already legible on dark).
+- `--persimmon: #F58A5A`, `--persimmon-2: #F7A582`, `--persimmon-3: #2A1810`.
+- `--paper`, `--cream`, `--ink` unchanged.
+- `--primary-foreground` stays near-black (`#1E1C19`) for contrast on orange.
 
-- Base: `--paper #FFFDF9`, `--cream #FAF7F2`, `--ink #2C241D`, `--headline #1E1814`, `--muted-foreground #8B7E6F`
-- Forest: `--forest #3D5A46`, `--forest-2 #5A7A64`, `--forest-3 #EBF2ED`
-- Persimmon: `--persimmon #C2795C`, `--persimmon-2 #D4957A`, `--persimmon-3 #FAF0EB`
-- Cobalt: `--cobalt #5B739C`, `--cobalt-2 #7A8FB3`, `--cobalt-3 #EEF1F6`
-- Mustard: `--mustard #B8943E`, `--mustard-2 #D0AE5A`, `--mustard-3 #F9F4E8`
-- Brand: `--terracotta #C2795C` (reuse persimmon hue for CTA), `--deep-teal #2F5D62`
+### Contrast check
+- White text on `#F37037` primary buttons: ~3.1:1 — fails AA for body text. Keep primary-foreground = near-black (`#1E1814`), which passes ~7:1. Update `--primary-foreground` in light mode from `#FFFDF9` to `#1E1814`.
+- Orange on white for links/icons: ~3.1:1 — OK for large/UI elements, not body copy. Existing usage is buttons/icons/accents only, so acceptable.
 
-Under `.dark`, apply the dark-mode column verbatim.
+## No component edits
 
-### 2. Remap shadcn semantic tokens
-
-Keep the existing shadcn variable names (`--background`, `--foreground`, `--primary`, `--card`, `--border`, `--ring`, `--destructive`, `--success`, `--warning`, `--accent`, `--muted`, sidebar tokens, chart tokens) so no component breaks. Point them at the new palette:
-
-- `--background` → `--paper`, `--foreground` → `--ink`
-- `--card` → `--paper` (light) / `#252320` cream-dark (dark)
-- `--primary` → `--terracotta`, `--primary-foreground` → paper
-- `--secondary` / `--muted` / `--accent` → cream + persimmon-3 tints
-- `--border` / `--input` → warm hairline derived from ink at low alpha
-- `--ring` → terracotta
-- `--success` → forest, `--warning` → mustard, `--destructive` keep current red-family but retune to sit on the new paper
-- Charts: `--chart-1..5` → persimmon, forest, cobalt, mustard, deep-teal (decorative variety)
-- Sidebar tokens → cream / ink pair
-
-### 3. Extend `@theme inline` to publish the new utilities
-
-Add the new color entries so Tailwind generates the classes the DESIGN.md promises even though we're only using them incidentally:
-
-```css
-@theme inline {
-  --color-paper: var(--paper);
-  --color-cream: var(--cream);
-  --color-ink: var(--ink);
-  --color-headline: var(--headline);
-  --color-forest: var(--forest);
-  --color-forest-2: var(--forest-2);
-  --color-forest-3: var(--forest-3);
-  /* …persimmon, cobalt, mustard 1/2/3… */
-  --color-terracotta: var(--terracotta);
-  --color-deep-teal: var(--deep-teal);
-}
-```
-
-This yields `bg-paper`, `text-ink`, `bg-forest-3`, `text-persimmon`, `border-cobalt`, `bg-terracotta`, etc., alongside the existing shadcn utilities. No component code changes required.
-
-### 4. Verify contrast
-
-Spot-check AA on the new pairs actually used by shadcn semantics:
-- `--ink` on `--paper` (body)
-- `--terracotta` (primary) foreground on paper — if it fails, darken `--primary` to a slightly deeper terracotta while keeping the token name.
-- `--muted-foreground` on `--paper` and on `--cream`.
-- Dark mode equivalents.
-
-If any pair fails, adjust only the shadcn semantic mapping (not the DESIGN.md base tokens).
+`bg-primary`, `text-primary`, `ring-primary`, `bg-sidebar-primary`, `border-primary`, `text-chart-1` all resolve through the tokens above. Logo (`Gobez` wordmark using `text-primary`), CTA buttons, active nav pill, focus rings, and Coach card accents update automatically.
 
 ## Verification
 
-- `bun run tsc`-equivalent typecheck (runs automatically).
-- Preview: skim `/`, `/auth`, `/today`, `/planner`, `/goals`, `/insights`, `/settings` in both light and dark to confirm nothing regressed visually and the palette shifted to the new warm/pillar tones.
+- Typecheck (auto).
+- Spot-check `/today` (CTA + streak icons), `/planner` (New block button, palette highlights), `/goals` (color chips still varied), `/insights` (chart-1 line is now orange, others unchanged), `/auth` (Sign in button), both light and dark.
+- Confirm primary button text remains readable (near-black on orange).
 
-## Out of scope for later
+## Out of scope
 
-If you later want the pillar accents to carry meaning (per-technique or per-goal), or want the surface scale / motion tiers / Garden system, that's a separate pass on top of this palette swap.
+- Reworking goal color options (terracotta/sage/ocean/gold/plum) in the Goal creator. If you want the goal palette itself rebranded to only GlobalLogic hues, that's a separate pass.
+- Changing the wordmark font or logo mark artwork.
