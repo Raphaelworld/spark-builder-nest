@@ -32,7 +32,9 @@ function dayKey(d: Date): string {
 
 export const getInsights = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ days: z.number().int().min(7).max(180).default(30) }).parse(d ?? {}))
+  .inputValidator((d) =>
+    z.object({ days: z.number().int().min(7).max(180).default(30) }).parse(d ?? {}),
+  )
   .handler(async ({ data, context }) => {
     const since = new Date();
     since.setDate(since.getDate() - data.days);
@@ -106,9 +108,7 @@ export const getInsights = createServerFn({ method: "GET" })
     let bestSum = 0;
     for (let h = 0; h < 24; h++) {
       const sum =
-        (hourMap.get(h) ?? 0) +
-        (hourMap.get((h + 1) % 24) ?? 0) +
-        (hourMap.get((h + 2) % 24) ?? 0);
+        (hourMap.get(h) ?? 0) + (hourMap.get((h + 1) % 24) ?? 0) + (hourMap.get((h + 2) % 24) ?? 0);
       if (sum > bestSum) {
         bestSum = sum;
         bestHour = h;
@@ -152,7 +152,8 @@ export const getInsights = createServerFn({ method: "GET" })
     });
     const lastWeekMin = lastWeek.reduce((sum, s) => sum + actualMinutes(s), 0);
     const prevWeekMin = prevWeek.reduce((sum, s) => sum + actualMinutes(s), 0);
-    const weekDelta = prevWeekMin === 0 ? (lastWeekMin > 0 ? 1 : 0) : (lastWeekMin - prevWeekMin) / prevWeekMin;
+    const weekDelta =
+      prevWeekMin === 0 ? (lastWeekMin > 0 ? 1 : 0) : (lastWeekMin - prevWeekMin) / prevWeekMin;
 
     // Recent notes (next-time reflections)
     const recentNotes = completed

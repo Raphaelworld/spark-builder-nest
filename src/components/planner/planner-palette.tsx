@@ -35,10 +35,11 @@ export function PlannerPalette({
     if (!open) setValue("");
   }, [open]);
 
-  const parsed = parsePlan(value, goals.filter((g) => g.status === "active"));
-  const goalTitle = parsed?.goal_id
-    ? goals.find((g) => g.id === parsed.goal_id)?.title
-    : null;
+  const parsed = parsePlan(
+    value,
+    goals.filter((g) => g.status === "active"),
+  );
+  const goalTitle = parsed?.goal_id ? goals.find((g) => g.id === parsed.goal_id)?.title : null;
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
@@ -49,7 +50,9 @@ export function PlannerPalette({
       />
       <CommandList>
         {!value && (
-          <CommandEmpty>Type a plan in plain English. Try &quot;Plan writing tomorrow 4pm 45m&quot;.</CommandEmpty>
+          <CommandEmpty>
+            Type a plan in plain English. Try &quot;Plan writing tomorrow 4pm 45m&quot;.
+          </CommandEmpty>
         )}
         {value && !parsed && <CommandEmpty>Couldn&apos;t parse — add a day and time.</CommandEmpty>}
         {parsed && (
@@ -67,13 +70,11 @@ export function PlannerPalette({
                 <span className="font-medium">{parsed.title}</span>
               </div>
               <span className="text-xs text-muted-foreground">
-                {DAYS[parsed.day_of_week]} · {fmt(parsed.start_minute)} ·{" "}
-                {parsed.planned_minutes}m · {TECHNIQUES[parsed.technique].name}
+                {DAYS[parsed.day_of_week]} · {fmt(parsed.start_minute)} · {parsed.planned_minutes}m
+                · {TECHNIQUES[parsed.technique].name}
                 {goalTitle ? ` · ${goalTitle}` : ""}
               </span>
-              <span className="mt-1 text-[10px] text-muted-foreground">
-                Enter to add
-              </span>
+              <span className="mt-1 text-[10px] text-muted-foreground">Enter to add</span>
             </CommandItem>
           </CommandGroup>
         )}

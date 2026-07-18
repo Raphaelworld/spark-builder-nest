@@ -19,7 +19,9 @@ export function AnalyticsProvider() {
         lastPath.current = next;
       }
     });
-    return () => { unsub(); };
+    return () => {
+      unsub();
+    };
   }, [router]);
 
   return null;

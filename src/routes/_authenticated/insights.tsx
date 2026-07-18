@@ -16,10 +16,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { MonthlyPulseCard, WeeklyReviewCard } from "@/components/reflections";
 import { insightsQueryOptions } from "@/lib/insights-queries";
-import {
-  pulsesQueryOptions,
-  weeklyReviewQueryOptions,
-} from "@/lib/reflections-queries";
+import { pulsesQueryOptions, weeklyReviewQueryOptions } from "@/lib/reflections-queries";
 import { TECHNIQUES } from "@/lib/techniques";
 
 export const Route = createFileRoute("/_authenticated/insights")({
@@ -28,8 +25,7 @@ export const Route = createFileRoute("/_authenticated/insights")({
       { title: "Insights — Gobez" },
       {
         name: "description",
-        content:
-          "How your focus is trending — sessions, minutes, and weekly reviews.",
+        content: "How your focus is trending — sessions, minutes, and weekly reviews.",
       },
     ],
   }),
@@ -79,9 +75,7 @@ function InsightsPage() {
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="font-serif text-3xl text-foreground">Insights</h1>
-            <p className="text-muted-foreground">
-              A quiet look at how your focus is trending.
-            </p>
+            <p className="text-muted-foreground">A quiet look at how your focus is trending.</p>
           </div>
           <div className="flex gap-1 rounded-full border border-border bg-card p-1">
             {RANGES.map((r) => (
@@ -116,9 +110,7 @@ function InsightsPage() {
         <section className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-4 flex items-baseline justify-between">
             <h2 className="font-serif text-xl">Daily focus</h2>
-            <span className="text-xs text-muted-foreground">
-              minutes per day, last {days}
-            </span>
+            <span className="text-xs text-muted-foreground">minutes per day, last {days}</span>
           </div>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -234,9 +226,7 @@ function InsightsPage() {
                         <Cell
                           key={entry.hour}
                           fill={
-                            inWindow && data.totals.sessions > 0
-                              ? "var(--primary)"
-                              : "var(--muted)"
+                            inWindow && data.totals.sessions > 0 ? "var(--primary)" : "var(--muted)"
                           }
                         />
                       );

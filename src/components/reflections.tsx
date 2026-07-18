@@ -1,15 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, PencilLine } from "lucide-react";
-import {
-  pulsesQueryOptions,
-  weeklyReviewQueryOptions,
-} from "@/lib/reflections-queries";
-import {
-  savePulse,
-  saveWeeklyReview,
-} from "@/lib/reflections.functions";
+import { pulsesQueryOptions, weeklyReviewQueryOptions } from "@/lib/reflections-queries";
+import { savePulse, saveWeeklyReview } from "@/lib/reflections.functions";
 
 function MiniStat({ label, value }: { label: string; value: string | number }) {
   return (
@@ -38,8 +32,7 @@ export function WeeklyReviewCard() {
   const qc = useQueryClient();
   const save = useServerFn(saveWeeklyReview);
   const mutation = useMutation({
-    mutationFn: (input: { wentWell: string; nextFocus: string }) =>
-      save({ data: input }),
+    mutationFn: (input: { wentWell: string; nextFocus: string }) => save({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["weeklyReview"] }),
   });
 
@@ -62,9 +55,7 @@ export function WeeklyReviewCard() {
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <div>
           <h2 className="font-serif text-xl">Weekly review</h2>
-          <p className="text-xs text-muted-foreground">
-            Week of {formatWeek(data.weekStart)}
-          </p>
+          <p className="text-xs text-muted-foreground">Week of {formatWeek(data.weekStart)}</p>
         </div>
         {existing && !editing && (
           <button
@@ -80,10 +71,7 @@ export function WeeklyReviewCard() {
       <div className="mb-4 grid grid-cols-3 gap-2 text-center">
         <MiniStat label="Sessions" value={stats.sessions} />
         <MiniStat label="Minutes" value={stats.minutes} />
-        <MiniStat
-          label="Avg focus"
-          value={stats.avgFocus ? `${stats.avgFocus}` : "—"}
-        />
+        <MiniStat label="Avg focus" value={stats.avgFocus ? `${stats.avgFocus}` : "—"} />
       </div>
 
       {showForm ? (
@@ -91,16 +79,11 @@ export function WeeklyReviewCard() {
           className="space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            mutation.mutate(
-              { wentWell, nextFocus },
-              { onSuccess: () => setEditing(false) },
-            );
+            mutation.mutate({ wentWell, nextFocus }, { onSuccess: () => setEditing(false) });
           }}
         >
           <label className="block text-sm">
-            <span className="mb-1 block text-muted-foreground">
-              What went well?
-            </span>
+            <span className="mb-1 block text-muted-foreground">What went well?</span>
             <textarea
               value={wentWell}
               onChange={(e) => setWentWell(e.target.value)}
@@ -147,17 +130,13 @@ export function WeeklyReviewCard() {
         <div className="space-y-3 text-sm">
           {existing.went_well && (
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                Went well
-              </p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Went well</p>
               <p className="mt-1 text-foreground">{existing.went_well}</p>
             </div>
           )}
           {existing.next_focus && (
             <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                Next focus
-              </p>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">Next focus</p>
               <p className="mt-1 text-foreground">{existing.next_focus}</p>
             </div>
           )}
@@ -174,17 +153,9 @@ export function WeeklyReviewCard() {
               .filter((h) => h.week_start !== data.weekStart)
               .map((h) => (
                 <li key={h.id} className="border-l-2 border-primary/30 pl-3">
-                  <p className="text-xs text-muted-foreground">
-                    {formatWeek(h.week_start)}
-                  </p>
-                  {h.went_well && (
-                    <p className="mt-1 text-foreground">{h.went_well}</p>
-                  )}
-                  {h.next_focus && (
-                    <p className="mt-1 text-muted-foreground">
-                      → {h.next_focus}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground">{formatWeek(h.week_start)}</p>
+                  {h.went_well && <p className="mt-1 text-foreground">{h.went_well}</p>}
+                  {h.next_focus && <p className="mt-1 text-muted-foreground">→ {h.next_focus}</p>}
                 </li>
               ))}
           </ul>
@@ -220,8 +191,7 @@ export function MonthlyPulseCard() {
   const qc = useQueryClient();
   const save = useServerFn(savePulse);
   const mutation = useMutation({
-    mutationFn: (input: PulseValues & { note: string }) =>
-      save({ data: input }),
+    mutationFn: (input: PulseValues & { note: string }) => save({ data: input }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["pulses"] }),
   });
 
@@ -229,8 +199,13 @@ export function MonthlyPulseCard() {
   const [editing, setEditing] = useState(false);
   const [values, setValues] = useState<PulseValues>(DEFAULT_PULSE);
   const [note, setNote] = useState("");
+  // Re-sync form state only when the pulse identity changes, not on every
+  // refetch — a background refetch must not clobber in-progress edits.
+  const syncedPulseId = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
+    if (syncedPulseId.current === (existing?.id ?? null)) return;
+    syncedPulseId.current = existing?.id ?? null;
     if (existing) {
       setValues({
         energy: existing.energy,
@@ -245,7 +220,7 @@ export function MonthlyPulseCard() {
       setValues(DEFAULT_PULSE);
       setNote("");
     }
-  }, [existing?.id]);
+  }, [existing]);
 
   const trend = useMemo(() => {
     if (!data) return [];
@@ -253,14 +228,7 @@ export function MonthlyPulseCard() {
       month: p.month_start,
       avg:
         Math.round(
-          ((p.energy +
-            p.motivation +
-            p.clarity +
-            p.progress +
-            p.balance +
-            p.confidence) /
-            6) *
-            10,
+          ((p.energy + p.motivation + p.clarity + p.progress + p.balance + p.confidence) / 6) * 10,
         ) / 10,
     }));
   }, [data]);
@@ -273,9 +241,7 @@ export function MonthlyPulseCard() {
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <div>
           <h2 className="font-serif text-xl">Monthly pulse</h2>
-          <p className="text-xs text-muted-foreground">
-            {formatMonth(data.monthStart)}
-          </p>
+          <p className="text-xs text-muted-foreground">{formatMonth(data.monthStart)}</p>
         </div>
         {existing && !editing && (
           <button
@@ -293,28 +259,21 @@ export function MonthlyPulseCard() {
           className="space-y-4"
           onSubmit={(e) => {
             e.preventDefault();
-            mutation.mutate(
-              { ...values, note },
-              { onSuccess: () => setEditing(false) },
-            );
+            mutation.mutate({ ...values, note }, { onSuccess: () => setEditing(false) });
           }}
         >
           {PULSE_FIELDS.map((f) => (
             <label key={f.key} className="block text-sm">
               <div className="mb-1 flex items-baseline justify-between">
                 <span className="text-foreground">{f.label}</span>
-                <span className="tabular-nums text-muted-foreground">
-                  {values[f.key]} / 10
-                </span>
+                <span className="tabular-nums text-muted-foreground">{values[f.key]} / 10</span>
               </div>
               <input
                 type="range"
                 min={1}
                 max={10}
                 value={values[f.key]}
-                onChange={(e) =>
-                  setValues((v) => ({ ...v, [f.key]: Number(e.target.value) }))
-                }
+                onChange={(e) => setValues((v) => ({ ...v, [f.key]: Number(e.target.value) }))}
                 className="w-full accent-[color:var(--primary)]"
                 aria-label={f.label}
               />
@@ -364,19 +323,12 @@ export function MonthlyPulseCard() {
                   <span className="tabular-nums text-muted-foreground">{v}</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${pct}%` }}
-                  />
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
                 </div>
               </div>
             );
           })}
-          {existing.note && (
-            <p className="pt-2 text-sm text-muted-foreground">
-              "{existing.note}"
-            </p>
-          )}
+          {existing.note && <p className="pt-2 text-sm text-muted-foreground">"{existing.note}"</p>}
         </div>
       )}
 

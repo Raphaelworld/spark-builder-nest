@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 function isoDate(d: Date): string {
@@ -36,11 +38,7 @@ function actualMinutes(s: SessionRow): number {
   return s.planned_minutes ?? 0;
 }
 
-async function computeWeekStats(
-  supabase: any,
-  userId: string,
-  start: Date,
-) {
+async function computeWeekStats(supabase: SupabaseClient<Database>, userId: string, start: Date) {
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
   const { data, error } = await supabase

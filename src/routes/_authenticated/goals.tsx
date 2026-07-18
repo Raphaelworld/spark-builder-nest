@@ -5,11 +5,7 @@ import { useState } from "react";
 import { Plus, Archive, Trash2, Target } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { goalsQueryOptions } from "@/lib/planner-queries";
-import {
-  createGoal,
-  deleteGoal,
-  updateGoal,
-} from "@/lib/goals.functions";
+import { createGoal, deleteGoal, updateGoal } from "@/lib/goals.functions";
 
 export const Route = createFileRoute("/_authenticated/goals")({
   loader: ({ context }) => {
@@ -20,8 +16,7 @@ export const Route = createFileRoute("/_authenticated/goals")({
       { title: "Goals — Gobez" },
       {
         name: "description",
-        content:
-          "Up to three things you're working toward, with progress that tracks itself.",
+        content: "Up to three things you're working toward, with progress that tracks itself.",
       },
     ],
   }),
@@ -67,14 +62,12 @@ function GoalsPage() {
   });
 
   const archive = useMutation({
-    mutationFn: (id: string) =>
-      updateFn({ data: { id, patch: { status: "archived" } } }),
+    mutationFn: (id: string) => updateFn({ data: { id, patch: { status: "archived" } } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["goals"] }),
   });
 
   const restore = useMutation({
-    mutationFn: (id: string) =>
-      updateFn({ data: { id, patch: { status: "active" } } }),
+    mutationFn: (id: string) => updateFn({ data: { id, patch: { status: "active" } } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["goals"] }),
   });
 
@@ -90,8 +83,8 @@ function GoalsPage() {
           <div className="space-y-1">
             <h1 className="font-serif text-3xl md:text-4xl text-foreground">Goals</h1>
             <p className="text-sm text-muted-foreground">
-              Pick up to three things you're working toward. Sessions you tag
-              will count toward them automatically.
+              Pick up to three things you're working toward. Sessions you tag will count toward them
+              automatically.
             </p>
           </div>
           <button
@@ -106,8 +99,7 @@ function GoalsPage() {
 
         {active.length >= 3 && (
           <p className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-            You've got three active goals — the sweet spot. Archive one to add
-            another.
+            You've got three active goals — the sweet spot. Archive one to add another.
           </p>
         )}
 
@@ -200,26 +192,18 @@ function GoalCard({
   onDelete: () => void;
 }) {
   const daysLeft = goal.deadline
-    ? Math.ceil(
-        (new Date(goal.deadline).getTime() - Date.now()) / (24 * 60 * 60 * 1000),
-      )
+    ? Math.ceil((new Date(goal.deadline).getTime() - Date.now()) / (24 * 60 * 60 * 1000))
     : null;
-  const swatch =
-    COLORS.find((c) => c.id === goal.color)?.swatch ?? "bg-primary";
+  const swatch = COLORS.find((c) => c.id === goal.color)?.swatch ?? "bg-primary";
 
   return (
     <article className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm">
-      <span
-        aria-hidden
-        className={`absolute inset-y-0 left-0 w-1 ${swatch}`}
-      />
+      <span aria-hidden className={`absolute inset-y-0 left-0 w-1 ${swatch}`} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="font-serif text-xl leading-snug">{goal.title}</h3>
           {goal.description && (
-            <p className="mt-1 text-sm text-muted-foreground">
-              {goal.description}
-            </p>
+            <p className="mt-1 text-sm text-muted-foreground">{goal.description}</p>
           )}
         </div>
         <div className="flex gap-1">
@@ -243,13 +227,7 @@ function GoalCard({
         <span>{goal.stats.sessions} sessions</span>
         <span>{goal.stats.minutes} focus min</span>
         {daysLeft !== null && (
-          <span
-            className={
-              daysLeft <= 7 && daysLeft >= 0
-                ? "font-medium text-primary"
-                : ""
-            }
-          >
+          <span className={daysLeft <= 7 && daysLeft >= 0 ? "font-medium text-primary" : ""}>
             {daysLeft < 0
               ? `${-daysLeft}d past deadline`
               : daysLeft === 0
@@ -312,9 +290,7 @@ function GoalForm({
         </p>
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium">
-          Why (optional)
-        </label>
+        <label className="mb-1 block text-sm font-medium">Why (optional)</label>
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -324,9 +300,7 @@ function GoalForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm font-medium">
-            Deadline (optional)
-          </label>
+          <label className="mb-1 block text-sm font-medium">Deadline (optional)</label>
           <input
             type="date"
             value={deadline}

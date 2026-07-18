@@ -1,6 +1,18 @@
-import { useEffect, useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { useState } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,7 +86,14 @@ function MobileWrapper(props: Props) {
           </DrawerDescription>
         </DrawerHeader>
         <div className="px-4 pb-6">
-          <EditorForm {...props} />
+          <EditorForm
+            key={
+              props.value
+                ? `${props.value.id ?? "new"}:${props.value.day_of_week}:${props.value.start_minute}`
+                : "empty"
+            }
+            {...props}
+          />
         </div>
       </DrawerContent>
     </Drawer>
@@ -85,16 +104,10 @@ function EditorForm({ value, goals, onSubmit, onDelete, pending, error, onOpenCh
   const [title, setTitle] = useState(value?.title ?? "");
   const [goalId, setGoalId] = useState<string | "">(value?.goal_id ?? "");
   const [technique, setTechnique] = useState<TechniqueId>(value?.technique ?? "pomodoro");
-  const [minutes, setMinutes] = useState(value?.planned_minutes ?? TECHNIQUES.pomodoro.defaultMinutes);
+  const [minutes, setMinutes] = useState(
+    value?.planned_minutes ?? TECHNIQUES.pomodoro.defaultMinutes,
+  );
   const activeGoals = goals.filter((g) => g.status === "active");
-
-  useEffect(() => {
-    if (!value) return;
-    setTitle(value.title ?? "");
-    setGoalId(value.goal_id ?? "");
-    setTechnique(value.technique);
-    setMinutes(value.planned_minutes);
-  }, [value?.id, value?.day_of_week, value?.start_minute]);
 
   if (!value) return null;
 
@@ -114,7 +127,9 @@ function EditorForm({ value, goals, onSubmit, onDelete, pending, error, onOpenCh
       className="space-y-5 pt-2"
     >
       <div>
-        <Label htmlFor="block-title" className="mb-1.5 block">What are you focusing on?</Label>
+        <Label htmlFor="block-title" className="mb-1.5 block">
+          What are you focusing on?
+        </Label>
         <Input
           id="block-title"
           autoFocus
@@ -196,7 +211,9 @@ function EditorForm({ value, goals, onSubmit, onDelete, pending, error, onOpenCh
       </div>
 
       {error && (
-        <p role="alert" className="text-sm text-destructive">{error}</p>
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
       )}
 
       <div className="flex gap-2 pt-2">

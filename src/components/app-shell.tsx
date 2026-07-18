@@ -18,8 +18,7 @@ function useTheme() {
   useEffect(() => {
     const stored = localStorage.getItem("gobez-theme");
     const prefers =
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
     setDark(prefers);
     document.documentElement.classList.toggle("dark", prefers);
   }, []);
@@ -116,7 +115,10 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
       <header className="fixed inset-x-0 top-0 z-30 hidden h-16 items-center justify-between border-b border-border bg-background/90 px-6 backdrop-blur md:flex">
         <Logo />
 
-        <nav className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1" aria-label="Primary">
+        <nav
+          className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1"
+          aria-label="Primary"
+        >
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = pathname === to || pathname.startsWith(to + "/");
             return (

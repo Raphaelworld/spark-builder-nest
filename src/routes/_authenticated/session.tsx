@@ -31,7 +31,9 @@ export const Route = createFileRoute("/_authenticated/session")({
   head: () => ({ meta: [{ title: "Focus session — Gobez" }] }),
   errorComponent: ({ error }) => (
     <AppShell>
-      <p role="alert" className="text-destructive">{error.message}</p>
+      <p role="alert" className="text-destructive">
+        {error.message}
+      </p>
     </AppShell>
   ),
   component: SessionPage,
@@ -94,19 +96,13 @@ function SetupView() {
   const activeGoals = goals.filter((g) => g.status === "active");
   const start = useServerFn(startSession);
   const [task, setTask] = useState(search.task ?? "");
-  const [technique, setTechnique] = useState<TechniqueId>(
-    search.technique ?? "pomodoro",
-  );
-  const [minutes, setMinutes] = useState(
-    search.minutes ?? TECHNIQUES.pomodoro.defaultMinutes,
-  );
+  const [technique, setTechnique] = useState<TechniqueId>(search.technique ?? "pomodoro");
+  const [minutes, setMinutes] = useState(search.minutes ?? TECHNIQUES.pomodoro.defaultMinutes);
   const [goalId, setGoalId] = useState<string | "">(search.goal_id ?? "");
   const selectedGoal = activeGoals.find((g) => g.id === goalId);
   const deadlineSoon =
     selectedGoal?.deadline &&
-    (new Date(selectedGoal.deadline).getTime() - Date.now()) /
-      (24 * 60 * 60 * 1000) <=
-      7;
+    (new Date(selectedGoal.deadline).getTime() - Date.now()) / (24 * 60 * 60 * 1000) <= 7;
   const [examMode, setExamMode] = useState(false);
   useEffect(() => {
     if (deadlineSoon) setExamMode(true);
@@ -154,7 +150,7 @@ function SetupView() {
           <div>
             <p className="mb-2 text-sm font-medium">Technique</p>
             <div className="grid gap-3 sm:grid-cols-3">
-              {(Object.values(TECHNIQUES)).map((t) => {
+              {Object.values(TECHNIQUES).map((t) => {
                 const selected = technique === t.id;
                 return (
                   <button
@@ -177,7 +173,6 @@ function SetupView() {
               })}
             </div>
           </div>
-
 
           {activeGoals.length > 0 && (
             <div>
@@ -240,9 +235,7 @@ function SetupView() {
             />
             <span className="text-sm">
               <span className="font-medium">Exam mode</span>
-              <span className="ml-2 text-muted-foreground">
-                Suppress check-ins and nudges
-              </span>
+              <span className="ml-2 text-muted-foreground">Suppress check-ins and nudges</span>
               {deadlineSoon && (
                 <span className="mt-1 block text-xs text-primary">
                   Your deadline is within a week — we turned this on for you.
@@ -315,14 +308,7 @@ function FocusView({ session }: { session: ActiveSession }) {
 
         <div className="relative flex h-64 w-64 items-center justify-center md:h-80 md:w-80">
           <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90">
-            <circle
-              cx="50"
-              cy="50"
-              r="45"
-              fill="none"
-              stroke="var(--muted)"
-              strokeWidth="4"
-            />
+            <circle cx="50" cy="50" r="45" fill="none" stroke="var(--muted)" strokeWidth="4" />
             <circle
               cx="50"
               cy="50"
@@ -337,9 +323,7 @@ function FocusView({ session }: { session: ActiveSession }) {
           </svg>
           <div className="text-center">
             <p className="font-serif text-5xl tabular-nums md:text-6xl">{mmss}</p>
-            <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">
-              remaining
-            </p>
+            <p className="mt-2 text-xs uppercase tracking-wide text-muted-foreground">remaining</p>
           </div>
         </div>
 
@@ -399,7 +383,8 @@ function FocusView({ session }: { session: ActiveSession }) {
                 }}
                 className="mt-4 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <Pause className="mr-1 inline h-3.5 w-3.5" aria-hidden />I'm stuck
+                <Pause className="mr-1 inline h-3.5 w-3.5" aria-hidden />
+                I'm stuck
               </button>
             </div>
           </div>

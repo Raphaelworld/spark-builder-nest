@@ -17,7 +17,11 @@ export const startSession = createServerFn({ method: "POST" })
     // Abandon any lingering active session for this user first
     await context.supabase
       .from("sessions")
-      .update({ status: "abandoned", ended_at: new Date().toISOString(), abandon_reason: "replaced" })
+      .update({
+        status: "abandoned",
+        ended_at: new Date().toISOString(),
+        abandon_reason: "replaced",
+      })
       .eq("user_id", context.userId)
       .eq("status", "active");
 
@@ -38,7 +42,13 @@ export const startSession = createServerFn({ method: "POST" })
     await context.supabase.from("events").insert({
       user_id: context.userId,
       name: "session_started",
-      payload: { session_id: row.id, technique: data.technique, planned_minutes: data.planned_minutes, exam_mode: data.exam_mode, goal_id: data.goal_id ?? null } as never,
+      payload: {
+        session_id: row.id,
+        technique: data.technique,
+        planned_minutes: data.planned_minutes,
+        exam_mode: data.exam_mode,
+        goal_id: data.goal_id ?? null,
+      } as never,
     });
     return row;
   });
@@ -123,7 +133,12 @@ export const completeSession = createServerFn({ method: "POST" })
     await context.supabase.from("events").insert({
       user_id: context.userId,
       name: "session_completed",
-      payload: { session_id: data.session_id, focus_rating: data.focus_rating, worked_count: data.worked.length, didnt_count: data.didnt.length } as never,
+      payload: {
+        session_id: data.session_id,
+        focus_rating: data.focus_rating,
+        worked_count: data.worked.length,
+        didnt_count: data.didnt.length,
+      } as never,
     });
     return { ok: true };
   });
@@ -164,7 +179,9 @@ export const getTodaySummary = createServerFn({ method: "GET" })
 
     const { data: sessions, error } = await context.supabase
       .from("sessions")
-      .select("id, task, status, started_at, ended_at, planned_minutes, focus_rating, next_time_note")
+      .select(
+        "id, task, status, started_at, ended_at, planned_minutes, focus_rating, next_time_note",
+      )
       .eq("user_id", context.userId)
       .gte("started_at", since.toISOString())
       .order("started_at", { ascending: false });
@@ -198,9 +215,7 @@ export const getTodaySummary = createServerFn({ method: "GET" })
     // Allow starting from today OR yesterday
     const today = `${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`;
     if (!days.has(today)) cursor.setDate(cursor.getDate() - 1);
-    while (
-      days.has(`${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`)
-    ) {
+    while (days.has(`${cursor.getFullYear()}-${cursor.getMonth()}-${cursor.getDate()}`)) {
       streak += 1;
       cursor.setDate(cursor.getDate() - 1);
     }

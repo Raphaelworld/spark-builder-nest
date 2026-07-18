@@ -70,34 +70,34 @@
   --radius: 0.75rem;
 
   /* Paper cream + ink */
-  --background: oklch(0.977 0.008 85);        /* #faf8f3 cream */
-  --foreground: oklch(0.22 0.012 40);         /* deep ink */
+  --background: oklch(0.977 0.008 85); /* #faf8f3 cream */
+  --foreground: oklch(0.22 0.012 40); /* deep ink */
   --paper: oklch(0.977 0.008 85);
   --ink: oklch(0.22 0.012 40);
 
-  --card: oklch(0.992 0.006 85);              /* slightly brighter paper */
+  --card: oklch(0.992 0.006 85); /* slightly brighter paper */
   --card-foreground: oklch(0.22 0.012 40);
   --popover: oklch(0.992 0.006 85);
   --popover-foreground: oklch(0.22 0.012 40);
 
   /* Terracotta primary — darkened for AA on cream */
-  --primary: oklch(0.505 0.13 38);            /* ~#a14e33 */
+  --primary: oklch(0.505 0.13 38); /* ~#a14e33 */
   --primary-foreground: oklch(0.98 0.008 85);
 
-  --secondary: oklch(0.93 0.014 80);          /* warm paper shade */
+  --secondary: oklch(0.93 0.014 80); /* warm paper shade */
   --secondary-foreground: oklch(0.28 0.015 40);
 
   --muted: oklch(0.94 0.012 80);
-  --muted-foreground: oklch(0.44 0.02 45);    /* AA on cream */
+  --muted-foreground: oklch(0.44 0.02 45); /* AA on cream */
 
-  --accent: oklch(0.92 0.03 85);              /* soft mustard tint */
+  --accent: oklch(0.92 0.03 85); /* soft mustard tint */
   --accent-foreground: oklch(0.28 0.015 40);
 
   --destructive: oklch(0.505 0.17 28);
   --destructive-foreground: oklch(0.98 0.008 85);
 
   /* Forest green — growth/success */
-  --success: oklch(0.47 0.06 155);            /* ~#4d6b58 darker for AA */
+  --success: oklch(0.47 0.06 155); /* ~#4d6b58 darker for AA */
   --success-foreground: oklch(0.98 0.008 85);
 
   /* Muted mustard accent */
@@ -108,11 +108,11 @@
   --input: oklch(0.88 0.015 75);
   --ring: oklch(0.505 0.13 38);
 
-  --chart-1: oklch(0.505 0.13 38);            /* terracotta */
-  --chart-2: oklch(0.47 0.06 155);            /* forest */
-  --chart-3: oklch(0.62 0.13 82);             /* mustard */
-  --chart-4: oklch(0.55 0.08 55);             /* clay */
-  --chart-5: oklch(0.4 0.05 220);             /* dusk (used sparingly) */
+  --chart-1: oklch(0.505 0.13 38); /* terracotta */
+  --chart-2: oklch(0.47 0.06 155); /* forest */
+  --chart-3: oklch(0.62 0.13 82); /* mustard */
+  --chart-4: oklch(0.55 0.08 55); /* clay */
+  --chart-5: oklch(0.4 0.05 220); /* dusk (used sparingly) */
 
   --sidebar: oklch(0.96 0.01 85);
   --sidebar-foreground: oklch(0.22 0.012 40);
@@ -125,7 +125,7 @@
 }
 
 .dark {
-  --background: oklch(0.19 0.012 45);         /* deep ink paper */
+  --background: oklch(0.19 0.012 45); /* deep ink paper */
   --foreground: oklch(0.94 0.01 85);
   --paper: oklch(0.19 0.012 45);
   --ink: oklch(0.94 0.01 85);
@@ -135,7 +135,7 @@
   --popover: oklch(0.235 0.014 45);
   --popover-foreground: oklch(0.94 0.01 85);
 
-  --primary: oklch(0.7 0.13 38);              /* lifted terracotta for AA on dark */
+  --primary: oklch(0.7 0.13 38); /* lifted terracotta for AA on dark */
   --primary-foreground: oklch(0.19 0.012 45);
 
   --secondary: oklch(0.28 0.015 45);

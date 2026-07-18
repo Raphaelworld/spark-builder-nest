@@ -344,10 +344,7 @@ function BlockView({
   }
 
   const top = topFromMinutes(block.start_minute);
-  const height = Math.max(
-    ROW_PX - 2,
-    (block.planned_minutes + resizeDelta) * PX_PER_MIN - 2,
-  );
+  const height = Math.max(ROW_PX - 2, (block.planned_minutes + resizeDelta) * PX_PER_MIN - 2);
   const color = colorFor(goal?.color);
   const style: React.CSSProperties = {
     top,

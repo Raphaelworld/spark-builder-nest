@@ -43,9 +43,7 @@ function SettingsPage() {
     setName(profile.display_name ?? "");
     setTechnique((profile.default_technique as TechniqueId) ?? "pomodoro");
     setDuration(profile.default_duration ?? 25);
-    setTone(
-      (profile.coach_tone as "gentle" | "direct" | "playful") ?? "gentle",
-    );
+    setTone((profile.coach_tone as "gentle" | "direct" | "playful") ?? "gentle");
   }, [profile]);
 
   const mutation = useMutation({
@@ -195,13 +193,9 @@ function SettingsPage() {
           >
             {mutation.isPending ? "Saving…" : "Save changes"}
           </button>
-          {saved && (
-            <span className="text-sm text-success">Saved</span>
-          )}
+          {saved && <span className="text-sm text-success">Saved</span>}
           {mutation.isError && (
-            <span className="text-sm text-destructive">
-              {(mutation.error as Error).message}
-            </span>
+            <span className="text-sm text-destructive">{(mutation.error as Error).message}</span>
           )}
         </div>
 
@@ -235,9 +229,8 @@ function SettingsPage() {
         <section className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6">
           <h2 className="font-serif text-xl text-destructive">Danger zone</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Permanently delete your account, sessions, goals, and plans. This
-            cannot be undone. Type <span className="font-mono">DELETE</span> to
-            confirm.
+            Permanently delete your account, sessions, goals, and plans. This cannot be undone. Type{" "}
+            <span className="font-mono">DELETE</span> to confirm.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <input
@@ -260,7 +253,6 @@ function SettingsPage() {
             </p>
           )}
         </section>
-
       </div>
     </AppShell>
   );

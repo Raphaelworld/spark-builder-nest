@@ -37,6 +37,7 @@ Turn `/planner` from a tap-to-open-modal grid into a real planning surface: drag
 ## Technical section
 
 **Libraries to add**
+
 - `@dnd-kit/core` + `@dnd-kit/modifiers` — drag/drop for blocks and tray cards. Accessible, keyboard support built in.
 - `framer-motion` — layout transitions on move/resize/drop and tray reordering.
 - `cmdk` — command palette.
@@ -46,13 +47,16 @@ Turn `/planner` from a tap-to-open-modal grid into a real planning surface: drag
 Shadcn components to add if not present: `sheet`, `drawer`, `context-menu`, `command`, `tooltip`, `progress`.
 
 **Database**
+
 - New table `public.unscheduled_tasks` (user_id, title, goal_id nullable, technique, planned_minutes, position int for tray order, timestamps). Full RLS + GRANTs per project rules. Delete row when placed on grid (turned into a `planned_blocks` row).
 
 **Server functions** (new `src/lib/unscheduled.functions.ts`)
+
 - `listUnscheduledTasks`, `createUnscheduledTask`, `updateUnscheduledTask`, `deleteUnscheduledTask`, `reorderUnscheduledTasks`.
 - Extend `src/lib/planner.functions.ts` with `updatePlannedBlock` (day, start_minute, planned_minutes, end_minute) — currently only create + delete exist.
 
 **Client architecture**
+
 - Split `src/routes/_authenticated/planner.tsx` into:
   - `planner.tsx` — route, data wiring, DndContext, hotkeys, palette host.
   - `components/planner/week-grid.tsx` — grid + now-line + drag-to-create.
@@ -63,6 +67,7 @@ Shadcn components to add if not present: `sheet`, `drawer`, `context-menu`, `com
   - `lib/planner-parse.ts` — pure parser (task title + day + time + minutes + technique + optional goal by fuzzy match).
 
 **Interaction details**
+
 - Snap = 15 minutes. Grid row stays 30-min visual but drag math snaps to 15.
 - Drag-to-create uses a `pointerdown` on the day column, tracks pointer Y, renders a translucent ghost block, opens the editor Sheet on `pointerup` with computed start/duration.
 - Resize handle: 6px hit area on block bottom edge; separate dnd-kit sensor. Enforce min 15m, max 240m.
@@ -72,15 +77,18 @@ Shadcn components to add if not present: `sheet`, `drawer`, `context-menu`, `com
 - Context menu items call the same mutations as toolbar buttons.
 
 **Analytics**
+
 - Emit events via existing `logEvent`: `planner_block_created` (source: drag/tap/tray/palette), `planner_block_moved`, `planner_block_resized`, `planner_block_started`, `planner_palette_opened`, `planner_tray_task_created`, `planner_tray_task_placed`.
 
 **Accessibility**
+
 - Every drag interaction has a keyboard equivalent (arrow-key nudge, `Enter` to open editor, `Delete` to remove).
 - Blocks are `role="button"` with `aria-label` describing day/time/duration/title.
 - Sheet/Drawer manage focus trap via shadcn primitives.
 - Respect `prefers-reduced-motion` — disable spring/layout transitions.
 
 **Out of scope**
+
 - Multi-week view, recurring blocks, external calendar sync (Google/Apple), collaborative planning, AI-suggested schedules. All can follow later.
 
 ## Rollout
