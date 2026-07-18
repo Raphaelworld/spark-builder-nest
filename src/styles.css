@@ -222,13 +222,13 @@
   --primary: var(--terracotta);
   --primary-foreground: #1E1C19;
 
-  --secondary: #2E2A25;
-  --secondary-foreground: var(--ink);
+  --secondary: var(--violet);
+  --secondary-foreground: #FFFFFF;
 
   --muted: #2E2A25;
   --muted-foreground: #A09888;
 
-  --accent: var(--persimmon-3);
+  --accent: var(--violet-3);
   --accent-foreground: var(--ink);
 
   --destructive: #D46A52;
@@ -245,19 +245,20 @@
   --ring: var(--terracotta);
 
   --chart-1: var(--persimmon);
-  --chart-2: var(--forest);
-  --chart-3: var(--cobalt);
-  --chart-4: var(--mustard);
-  --chart-5: var(--deep-teal);
+  --chart-2: var(--violet);
+  --chart-3: var(--forest);
+  --chart-4: var(--cobalt);
+  --chart-5: var(--mustard);
 
   --sidebar: var(--cream);
   --sidebar-foreground: var(--ink);
   --sidebar-primary: var(--terracotta);
   --sidebar-primary-foreground: #1E1C19;
-  --sidebar-accent: var(--persimmon-3);
+  --sidebar-accent: var(--violet-3);
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: rgba(245, 240, 232, 0.10);
   --sidebar-ring: var(--terracotta);
+
 }
 
 @layer base {
