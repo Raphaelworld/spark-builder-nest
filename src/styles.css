@@ -113,7 +113,7 @@
   --mustard-3: #F9F4E8;
 
   /* DESIGN.md brand accents */
-  --terracotta: #B26A4E; /* deepened from persimmon for AA on paper */
+  --terracotta: #F37037; /* GlobalLogic brand orange */
   --deep-teal: #2F5D62;
 
   /* shadcn semantic mapping — light */
@@ -126,7 +126,7 @@
   --popover-foreground: var(--ink);
 
   --primary: var(--terracotta);
-  --primary-foreground: #FFFDF9;
+  --primary-foreground: #1E1814;
 
   --secondary: var(--cream);
   --secondary-foreground: var(--ink);
