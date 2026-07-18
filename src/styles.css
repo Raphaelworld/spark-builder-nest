@@ -74,6 +74,12 @@
   --color-terracotta: var(--terracotta);
   --color-deep-teal: var(--deep-teal);
 
+  /* Secondary violet accent */
+  --color-violet: var(--violet);
+  --color-violet-2: var(--violet-2);
+  --color-violet-3: var(--violet-3);
+
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
