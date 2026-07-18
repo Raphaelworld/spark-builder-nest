@@ -204,7 +204,13 @@
   --terracotta: #07A081;
   --deep-teal: #5A9098;
 
+  /* Secondary violet accent — dark */
+  --violet: #6C5CE7;
+  --violet-2: #9B8AEF;
+  --violet-3: #2A1F4D;
+
   /* shadcn semantic mapping — dark */
+
   --background: var(--paper);
   --foreground: var(--ink);
 
