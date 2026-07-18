@@ -122,6 +122,12 @@
   --terracotta: #07A081; /* Primary teal */
   --deep-teal: #2F5D62;
 
+  /* Secondary violet accent */
+  --violet: #563ACC;
+  --violet-2: #7B5FD9;
+  --violet-3: #EDE9FE;
+
+
   /* shadcn semantic mapping — light */
   --background: var(--paper);
   --foreground: var(--ink);
