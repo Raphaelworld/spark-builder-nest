@@ -140,14 +140,15 @@
   --primary: var(--terracotta);
   --primary-foreground: #1E1814;
 
-  --secondary: var(--cream);
-  --secondary-foreground: var(--ink);
+  --secondary: var(--violet);
+  --secondary-foreground: #FFFFFF;
 
   --muted: var(--cream);
   --muted-foreground: #6F6355; /* AA on paper */
 
-  --accent: var(--persimmon-3);
+  --accent: var(--violet-3);
   --accent-foreground: var(--ink);
+
 
   --destructive: #B4432B;
   --destructive-foreground: #FFFDF9;
