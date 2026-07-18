@@ -32,7 +32,9 @@ function dayKey(d: Date): string {
 
 export const getInsights = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d) => z.object({ days: z.number().int().min(7).max(180).default(30) }).parse(d ?? {}))
+  .inputValidator((d) =>
+    z.object({ days: z.number().int().min(7).max(180).default(30) }).parse(d ?? {}),
+  )
   .handler(async ({ data, context }) => {
     const since = new Date();
     since.setDate(since.getDate() - data.days);
@@ -106,9 +108,7 @@ export const getInsights = createServerFn({ method: "GET" })
     let bestSum = 0;
     for (let h = 0; h < 24; h++) {
       const sum =
-        (hourMap.get(h) ?? 0) +
-        (hourMap.get((h + 1) % 24) ?? 0) +
-        (hourMap.get((h + 2) % 24) ?? 0);
+        (hourMap.get(h) ?? 0) + (hourMap.get((h + 1) % 24) ?? 0) + (hourMap.get((h + 2) % 24) ?? 0);
       if (sum > bestSum) {
         bestSum = sum;
         bestHour = h;
@@ -118,10 +118,59 @@ export const getInsights = createServerFn({ method: "GET" })
     // Wrap-up tags
     const { data: tags, error: tErr } = await context.supabase
       .from("wrapup_tags")
-      .select("tag, polarity, created_at")
+      .select("tag, polarity, created_at, session_id")
       .eq("user_id", context.userId)
       .gte("created_at", since.toISOString());
     if (tErr) throw new Error(tErr.message);
+
+    // Check-ins → daily average confidence trend
+    const { data: checkins, error: cErr } = await context.supabase
+      .from("checkins")
+      .select("confidence, created_at")
+      .eq("user_id", context.userId)
+      .gte("created_at", since.toISOString());
+    if (cErr) throw new Error(cErr.message);
+    const confMap = new Map<string, { sum: number; n: number }>();
+    for (const c of checkins ?? []) {
+      const key = dayKey(new Date(c.created_at));
+      const cur = confMap.get(key) ?? { sum: 0, n: 0 };
+      confMap.set(key, { sum: cur.sum + c.confidence, n: cur.n + 1 });
+    }
+    const confidenceDaily = Array.from(dailyMap.keys()).map((day) => {
+      const c = confMap.get(day);
+      return {
+        day,
+        avgConfidence: c ? Math.round((c.sum / c.n) * 10) / 10 : null,
+      };
+    });
+    const avgConfidence = (checkins ?? []).length
+      ? Math.round(
+          ((checkins ?? []).reduce((s, c) => s + c.confidence, 0) / (checkins ?? []).length) * 10,
+        ) / 10
+      : 0;
+
+    // Session history (reverse-chronological, with per-session wrap-up tags)
+    const tagsBySession = new Map<string, { tag: string; polarity: string }[]>();
+    for (const t of tags ?? []) {
+      if (!t.session_id) continue;
+      const list = tagsBySession.get(t.session_id) ?? [];
+      list.push({ tag: t.tag, polarity: t.polarity });
+      tagsBySession.set(t.session_id, list);
+    }
+    const history = all
+      .filter((s) => s.status !== "active")
+      .slice(0, 30)
+      .map((s) => ({
+        id: s.id,
+        task: s.task,
+        technique: s.technique,
+        status: s.status,
+        started_at: s.started_at,
+        minutes: actualMinutes(s),
+        rating: s.focus_rating,
+        note: s.next_time_note,
+        tags: tagsBySession.get(s.id) ?? [],
+      }));
 
     const workedMap = new Map<string, number>();
     const didntMap = new Map<string, number>();
@@ -152,7 +201,8 @@ export const getInsights = createServerFn({ method: "GET" })
     });
     const lastWeekMin = lastWeek.reduce((sum, s) => sum + actualMinutes(s), 0);
     const prevWeekMin = prevWeek.reduce((sum, s) => sum + actualMinutes(s), 0);
-    const weekDelta = prevWeekMin === 0 ? (lastWeekMin > 0 ? 1 : 0) : (lastWeekMin - prevWeekMin) / prevWeekMin;
+    const weekDelta =
+      prevWeekMin === 0 ? (lastWeekMin > 0 ? 1 : 0) : (lastWeekMin - prevWeekMin) / prevWeekMin;
 
     // Recent notes (next-time reflections)
     const recentNotes = completed
@@ -182,5 +232,8 @@ export const getInsights = createServerFn({ method: "GET" })
         sessions: lastWeek.length,
       },
       recentNotes,
+      confidenceDaily,
+      avgConfidence,
+      history,
     };
   });

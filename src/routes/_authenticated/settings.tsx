@@ -7,6 +7,12 @@ import { profileQueryOptions } from "@/lib/profile-queries";
 import { updateProfile } from "@/lib/profile.functions";
 import { exportUserData, deleteAccount } from "@/lib/account.functions";
 import { TECHNIQUES, type TechniqueId } from "@/lib/techniques";
+import {
+  getThemePreference,
+  onThemeChange,
+  setThemePreference,
+  type ThemePreference,
+} from "@/lib/theme";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -37,15 +43,19 @@ function SettingsPage() {
   const [duration, setDuration] = useState(25);
   const [tone, setTone] = useState<"gentle" | "direct" | "playful">("gentle");
   const [saved, setSaved] = useState(false);
+  const [theme, setTheme] = useState<ThemePreference>("system");
+
+  useEffect(() => {
+    setTheme(getThemePreference());
+    return onThemeChange(() => setTheme(getThemePreference()));
+  }, []);
 
   useEffect(() => {
     if (!profile) return;
     setName(profile.display_name ?? "");
     setTechnique((profile.default_technique as TechniqueId) ?? "pomodoro");
     setDuration(profile.default_duration ?? 25);
-    setTone(
-      (profile.coach_tone as "gentle" | "direct" | "playful") ?? "gentle",
-    );
+    setTone((profile.coach_tone as "gentle" | "direct" | "playful") ?? "gentle");
   }, [profile]);
 
   const mutation = useMutation({
@@ -62,6 +72,15 @@ function SettingsPage() {
       qc.invalidateQueries({ queryKey: ["profile"] });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    },
+  });
+
+  // Clearing the timestamp re-triggers the onboarding overlay on Today.
+  const retake = useMutation({
+    mutationFn: () => save({ data: { onboarding_completed_at: null } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["profile"] });
+      navigate({ to: "/today" });
     },
   });
 
@@ -195,27 +214,62 @@ function SettingsPage() {
           >
             {mutation.isPending ? "Saving…" : "Save changes"}
           </button>
-          {saved && (
-            <span className="text-sm text-success">Saved</span>
-          )}
+          {saved && <span className="text-sm text-success">Saved</span>}
           {mutation.isError && (
-            <span className="text-sm text-destructive">
-              {(mutation.error as Error).message}
-            </span>
+            <span className="text-sm text-destructive">{(mutation.error as Error).message}</span>
           )}
         </div>
+
+        <section className="space-y-3 rounded-2xl border border-border bg-card p-6">
+          <h2 className="font-serif text-xl">Appearance</h2>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {(["light", "dark", "system"] as const).map((t) => {
+              const active = theme === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setThemePreference(t)}
+                  aria-pressed={active}
+                  className={`rounded-xl border p-3 text-sm capitalize ${
+                    active
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-background hover:bg-accent"
+                  }`}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground">
+            "System" follows your device's light/dark setting.
+          </p>
+        </section>
 
         <section className="rounded-2xl border border-border bg-card p-6">
           <h2 className="font-serif text-xl">Account</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Signed in as {profile?.display_name ?? "—"}
           </p>
-          <button
-            onClick={signOut}
-            className="mt-3 rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
-          >
-            Sign out
-          </button>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              onClick={() => retake.mutate()}
+              disabled={retake.isPending}
+              className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent disabled:opacity-50"
+            >
+              {retake.isPending ? "One moment…" : "Retake onboarding"}
+            </button>
+            <button
+              onClick={signOut}
+              className="rounded-full border border-border px-4 py-2 text-sm hover:bg-accent"
+            >
+              Sign out
+            </button>
+          </div>
+          {retake.isError && (
+            <p className="mt-2 text-sm text-destructive">{(retake.error as Error).message}</p>
+          )}
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-6">
@@ -235,9 +289,8 @@ function SettingsPage() {
         <section className="rounded-2xl border border-destructive/40 bg-destructive/5 p-6">
           <h2 className="font-serif text-xl text-destructive">Danger zone</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Permanently delete your account, sessions, goals, and plans. This
-            cannot be undone. Type <span className="font-mono">DELETE</span> to
-            confirm.
+            Permanently delete your account, sessions, goals, and plans. This cannot be undone. Type{" "}
+            <span className="font-mono">DELETE</span> to confirm.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <input
@@ -260,7 +313,6 @@ function SettingsPage() {
             </p>
           )}
         </section>
-
       </div>
     </AppShell>
   );

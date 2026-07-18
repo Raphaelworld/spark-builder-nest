@@ -245,44 +245,44 @@ export type Database = {
       }
       pulses: {
         Row: {
-          balance: number
-          clarity: number
+          help_seeking: number
+          resilience: number
           confidence: number
           created_at: string
-          energy: number
+          planning: number
           id: string
           month_start: string
-          motivation: number
+          focus: number
           note: string | null
-          progress: number
+          environment: number
           updated_at: string
           user_id: string
         }
         Insert: {
-          balance: number
-          clarity: number
+          help_seeking: number
+          resilience: number
           confidence: number
           created_at?: string
-          energy: number
+          planning: number
           id?: string
           month_start: string
-          motivation: number
+          focus: number
           note?: string | null
-          progress: number
+          environment: number
           updated_at?: string
           user_id: string
         }
         Update: {
-          balance?: number
-          clarity?: number
+          help_seeking?: number
+          resilience?: number
           confidence?: number
           created_at?: string
-          energy?: number
+          planning?: number
           id?: string
           month_start?: string
-          motivation?: number
+          focus?: number
           note?: string | null
-          progress?: number
+          environment?: number
           updated_at?: string
           user_id?: string
         }

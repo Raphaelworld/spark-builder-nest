@@ -16,10 +16,7 @@ import {
 import { AppShell } from "@/components/app-shell";
 import { MonthlyPulseCard, WeeklyReviewCard } from "@/components/reflections";
 import { insightsQueryOptions } from "@/lib/insights-queries";
-import {
-  pulsesQueryOptions,
-  weeklyReviewQueryOptions,
-} from "@/lib/reflections-queries";
+import { pulsesQueryOptions, weeklyReviewQueryOptions } from "@/lib/reflections-queries";
 import { TECHNIQUES } from "@/lib/techniques";
 
 export const Route = createFileRoute("/_authenticated/insights")({
@@ -28,8 +25,7 @@ export const Route = createFileRoute("/_authenticated/insights")({
       { title: "Insights — Gobez" },
       {
         name: "description",
-        content:
-          "How your focus is trending — sessions, minutes, and weekly reviews.",
+        content: "How your focus is trending — sessions, minutes, and weekly reviews.",
       },
     ],
   }),
@@ -79,9 +75,7 @@ function InsightsPage() {
         <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="font-serif text-3xl text-foreground">Insights</h1>
-            <p className="text-muted-foreground">
-              A quiet look at how your focus is trending.
-            </p>
+            <p className="text-muted-foreground">A quiet look at how your focus is trending.</p>
           </div>
           <div className="flex gap-1 rounded-full border border-border bg-card p-1">
             {RANGES.map((r) => (
@@ -116,9 +110,7 @@ function InsightsPage() {
         <section className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-4 flex items-baseline justify-between">
             <h2 className="font-serif text-xl">Daily focus</h2>
-            <span className="text-xs text-muted-foreground">
-              minutes per day, last {days}
-            </span>
+            <span className="text-xs text-muted-foreground">minutes per day, last {days}</span>
           </div>
           <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -159,6 +151,66 @@ function InsightsPage() {
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </section>
+
+        {/* Check-in confidence trend */}
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="font-serif text-xl">Check-in confidence</h2>
+            <span className="text-xs text-muted-foreground">
+              {data.avgConfidence ? `avg ${data.avgConfidence} / 5` : "no check-ins yet"}
+            </span>
+          </div>
+          {data.avgConfidence ? (
+            <div className="h-40 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={data.confidenceDaily}
+                  margin={{ left: -30, right: 8, top: 8, bottom: 0 }}
+                >
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" vertical={false} />
+                  <XAxis
+                    dataKey="day"
+                    tickFormatter={(v) => formatDay(v)}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    minTickGap={20}
+                  />
+                  <YAxis
+                    domain={[1, 5]}
+                    ticks={[1, 2, 3, 4, 5]}
+                    tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
+                    tickLine={false}
+                    axisLine={false}
+                    width={40}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: "var(--card)",
+                      border: "1px solid var(--border)",
+                      borderRadius: 12,
+                      fontSize: 12,
+                    }}
+                    labelFormatter={(v) => formatDay(String(v), false)}
+                    formatter={(v: number) => [`${v} / 5`, "Confidence"]}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="avgConfidence"
+                    stroke="var(--success)"
+                    strokeWidth={2}
+                    dot={{ r: 2 }}
+                    connectNulls
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Log a check-in during a session and your confidence trend shows here.
+            </p>
+          )}
         </section>
 
         {/* This week + best time */}
@@ -234,9 +286,7 @@ function InsightsPage() {
                         <Cell
                           key={entry.hour}
                           fill={
-                            inWindow && data.totals.sessions > 0
-                              ? "var(--primary)"
-                              : "var(--muted)"
+                            inWindow && data.totals.sessions > 0 ? "var(--primary)" : "var(--muted)"
                           }
                         />
                       );
@@ -304,6 +354,65 @@ function InsightsPage() {
         <section className="grid gap-4 md:grid-cols-2">
           <WeeklyReviewCard />
           <MonthlyPulseCard />
+        </section>
+
+        {/* Session history */}
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <div className="mb-3 flex items-baseline justify-between">
+            <h2 className="font-serif text-xl">Session history</h2>
+            <span className="text-xs text-muted-foreground">last {days} days</span>
+          </div>
+          {data.history.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No sessions in this window yet.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {data.history.map((s) => (
+                <li key={s.id}>
+                  <details className="group py-2">
+                    <summary className="flex cursor-pointer list-none items-center gap-3 rounded-lg px-1 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden">
+                      <span className="min-w-0 flex-1 truncate text-sm text-foreground">
+                        {s.task}
+                      </span>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {formatDay(s.started_at)}
+                      </span>
+                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                        {s.minutes}m
+                      </span>
+                      <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+                        {s.status === "abandoned" ? "—" : s.rating ? `${s.rating}/5` : "·"}
+                      </span>
+                    </summary>
+                    <div className="space-y-2 px-1 pb-2 pt-1 text-sm">
+                      <p className="text-xs text-muted-foreground">
+                        {TECHNIQUES[s.technique as keyof typeof TECHNIQUES]?.name ?? s.technique}
+                        {" · "}
+                        {formatDay(s.started_at, false)}
+                        {s.status === "abandoned" && " · ended early"}
+                      </p>
+                      {s.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {s.tags.map((t, i) => (
+                            <span
+                              key={`${t.tag}-${i}`}
+                              className={`rounded-full border px-2 py-0.5 text-xs ${
+                                t.polarity === "worked"
+                                  ? "border-success/40 bg-success/10 text-foreground"
+                                  : "border-destructive/40 bg-destructive/10 text-foreground"
+                              }`}
+                            >
+                              {t.tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      {s.note && <p className="text-muted-foreground">"{s.note}"</p>}
+                    </div>
+                  </details>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {/* Notes */}

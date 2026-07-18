@@ -6,6 +6,13 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getActiveSession } from "@/lib/sessions.functions";
 import { activeSessionQueryOptions } from "@/lib/session-queries";
 import { remainingMs, type SessionTimerFields } from "@/lib/techniques";
+import {
+  applyTheme,
+  getThemePreference,
+  onThemeChange,
+  resolveTheme,
+  setThemePreference,
+} from "@/lib/theme";
 
 const NAV = [
   { to: "/today", label: "Today", icon: Home },
@@ -17,19 +24,14 @@ const NAV = [
 function useTheme() {
   const [dark, setDark] = useState(false);
   useEffect(() => {
-    const stored = localStorage.getItem("gobez-theme");
-    const prefers =
-      stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
-    setDark(prefers);
-    document.documentElement.classList.toggle("dark", prefers);
+    const sync = () => setDark(resolveTheme(getThemePreference()) === "dark");
+    applyTheme(getThemePreference());
+    sync();
+    return onThemeChange(sync);
   }, []);
   const toggle = () => {
-    setDark((d) => {
-      const next = !d;
-      document.documentElement.classList.toggle("dark", next);
-      localStorage.setItem("gobez-theme", next ? "dark" : "light");
-      return next;
-    });
+    // The header toggle always sets an explicit theme; "system" lives in Settings.
+    setThemePreference(dark ? "light" : "dark");
   };
   return { dark, toggle };
 }
