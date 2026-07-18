@@ -234,14 +234,17 @@ spirit, though it adds a third schema-divergent table.
    as written — either restore terracotta/cream or amend the PRD.
 4. Add `aria-live` announcements for timer start/checkpoint/end.
 
-**P2 — core-loop completeness (PRD §4)**
-5. Pause/extend controls; auto check-in prompts at interval midpoints (+ optional note); break
-   prompts per technique.
-6. Stuck flow (help composer with copy/mailto) and reframe moment (confidence ≤2 / rating ≤2).
-7. Abandon "why" chips; an explicit End-early path from the focus screen.
-8. Wire setup to profile defaults, recent-task suggestions, and last `next_time_note` seed
-   (data already computed in `getTodaySummary`).
-9. Align exam mode with the PRD (gated visibility, calm/plan pre-step) or amend the PRD.
+**P2 — core-loop completeness (PRD §4)** — ✅ **implemented on this branch**
+5. ✅ Pause/extend controls (persisted `paused_at`/`paused_ms`, survives refresh); auto check-in
+   prompts at interval midpoints with optional 140-char note; break prompts per technique.
+6. ✅ Stuck flow (3-line help composer with copy/mailto) and reframe moment (check-in
+   confidence ≤2 or wrap-up rating ≤2 → catch-the-thought chips → reframe).
+7. ✅ Abandon "why" chips (shared dialog) and an explicit End-early path on the focus screen.
+8. ✅ Setup uses profile defaults, shows recent-task suggestion chips, and surfaces the last
+   `next_time_note` as the seed for the next session.
+9. ✅ Exam mode aligned with the PRD: toggle only appears when the tagged goal's deadline is
+   ≤7 days, and turning it on inserts a calm-and-plan step before the timer (it no longer
+   suppresses check-ins). Timer state also announces via `aria-live` (part of P1 item 4).
 
 **P3 — feature completeness**
 10. Set `planned_blocks.session_id` when a block launches a session; build planned-vs-actual

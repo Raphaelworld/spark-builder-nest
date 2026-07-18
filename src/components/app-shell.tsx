@@ -5,6 +5,7 @@ import { Home, CalendarDays, Target, LineChart, User, Moon, Sun, Timer } from "l
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { getActiveSession } from "@/lib/sessions.functions";
 import { activeSessionQueryOptions } from "@/lib/session-queries";
+import { remainingMs, type SessionTimerFields } from "@/lib/techniques";
 
 const NAV = [
   { to: "/today", label: "Today", icon: Home },
@@ -18,8 +19,7 @@ function useTheme() {
   useEffect(() => {
     const stored = localStorage.getItem("gobez-theme");
     const prefers =
-      stored === "dark" ||
-      (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
+      stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches);
     setDark(prefers);
     document.documentElement.classList.toggle("dark", prefers);
   }, []);
@@ -34,33 +34,33 @@ function useTheme() {
   return { dark, toggle };
 }
 
-function useCountdown(startedAt: string | null | undefined, plannedMinutes: number | undefined) {
+function useCountdown(session: SessionTimerFields | null | undefined) {
+  const paused = !!session?.paused_at;
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    if (!startedAt) return;
+    if (!session || paused) return;
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [startedAt]);
+  }, [session, paused]);
   return useMemo(() => {
-    if (!startedAt || !plannedMinutes) return { remainingMs: 0, mmss: "00:00", done: false };
-    const end = new Date(startedAt).getTime() + plannedMinutes * 60_000;
-    const remaining = Math.max(0, end - now);
+    if (!session) return { mmss: "00:00", done: false, paused: false };
+    const remaining = remainingMs(session, now);
     const totalSec = Math.floor(remaining / 1000);
     const m = Math.floor(totalSec / 60);
     const s = totalSec % 60;
     return {
-      remainingMs: remaining,
       mmss: `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`,
       done: remaining === 0,
+      paused,
     };
-  }, [now, startedAt, plannedMinutes]);
+  }, [now, session, paused]);
 }
 
 function SessionMiniBar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data } = useQuery(activeSessionQueryOptions());
   const active = data;
-  const { mmss } = useCountdown(active?.started_at, active?.planned_minutes);
+  const { mmss, paused } = useCountdown(active);
   if (!active || pathname.startsWith("/session")) return null;
   return (
     <Link
@@ -70,7 +70,7 @@ function SessionMiniBar() {
       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-primary">
         <Timer className="h-3.5 w-3.5" aria-hidden />
       </span>
-      <span className="font-mono tabular-nums text-foreground">{mmss}</span>
+      <span className="font-mono tabular-nums text-foreground">{paused ? "Paused" : mmss}</span>
       <span className="max-w-[140px] truncate text-muted-foreground">{active.task}</span>
     </Link>
   );
@@ -116,7 +116,10 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
       <header className="fixed inset-x-0 top-0 z-30 hidden h-16 items-center justify-between border-b border-border bg-background/90 px-6 backdrop-blur md:flex">
         <Logo />
 
-        <nav className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1" aria-label="Primary">
+        <nav
+          className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1"
+          aria-label="Primary"
+        >
           {NAV.map(({ to, label, icon: Icon }) => {
             const active = pathname === to || pathname.startsWith(to + "/");
             return (

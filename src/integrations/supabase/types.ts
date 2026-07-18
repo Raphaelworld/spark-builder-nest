@@ -298,6 +298,8 @@ export type Database = {
           goal_id: string | null
           id: string
           next_time_note: string | null
+          paused_at: string | null
+          paused_ms: number
           planned_minutes: number
           started_at: string
           status: Database["public"]["Enums"]["session_status"]
@@ -315,6 +317,8 @@ export type Database = {
           goal_id?: string | null
           id?: string
           next_time_note?: string | null
+          paused_at?: string | null
+          paused_ms?: number
           planned_minutes?: number
           started_at?: string
           status?: Database["public"]["Enums"]["session_status"]
@@ -332,6 +336,8 @@ export type Database = {
           goal_id?: string | null
           id?: string
           next_time_note?: string | null
+          paused_at?: string | null
+          paused_ms?: number
           planned_minutes?: number
           started_at?: string
           status?: Database["public"]["Enums"]["session_status"]
