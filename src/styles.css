@@ -5,10 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Gobez design system — warm, editorial focus companion.
- * Palette: cream paper, ink text, terracotta primary, forest success,
- * muted mustard accent. Never generic-SaaS indigo/blue.
- * All colors verified for WCAG AA (4.5:1) on their intended backgrounds.
+ * Gobez palette — sourced from DESIGN.md.
+ * Base: paper/cream/ink + headline + muted-foreground.
+ * Pillar accents (decorative only in Gobez): Forest, Persimmon, Cobalt, Mustard.
+ * Brand accents: Terracotta (CTA), Deep Teal (secondary).
  */
 
 @theme inline {
@@ -23,6 +23,7 @@
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "DM Serif Display", ui-serif, Georgia, serif;
 
+  /* shadcn semantic tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -48,8 +49,30 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+
+  /* DESIGN.md base */
   --color-paper: var(--paper);
+  --color-cream: var(--cream);
   --color-ink: var(--ink);
+  --color-headline: var(--headline);
+
+  /* DESIGN.md pillar accents */
+  --color-forest: var(--forest);
+  --color-forest-2: var(--forest-2);
+  --color-forest-3: var(--forest-3);
+  --color-persimmon: var(--persimmon);
+  --color-persimmon-2: var(--persimmon-2);
+  --color-persimmon-3: var(--persimmon-3);
+  --color-cobalt: var(--cobalt);
+  --color-cobalt-2: var(--cobalt-2);
+  --color-cobalt-3: var(--cobalt-3);
+  --color-mustard: var(--mustard);
+  --color-mustard-2: var(--mustard-2);
+  --color-mustard-3: var(--mustard-3);
+
+  /* DESIGN.md brand accents */
+  --color-terracotta: var(--terracotta);
+  --color-deep-teal: var(--deep-teal);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -69,111 +92,152 @@
 :root {
   --radius: 0.75rem;
 
-  /* Paper cream + ink */
-  --background: oklch(0.977 0.008 85);        /* #faf8f3 cream */
-  --foreground: oklch(0.22 0.012 40);         /* deep ink */
-  --paper: oklch(0.977 0.008 85);
-  --ink: oklch(0.22 0.012 40);
+  /* DESIGN.md base — light */
+  --paper: #FFFDF9;
+  --cream: #FAF7F2;
+  --ink: #2C241D;
+  --headline: #1E1814;
 
-  --card: oklch(0.992 0.006 85);              /* slightly brighter paper */
-  --card-foreground: oklch(0.22 0.012 40);
-  --popover: oklch(0.992 0.006 85);
-  --popover-foreground: oklch(0.22 0.012 40);
+  /* DESIGN.md pillars — light */
+  --forest: #3D5A46;
+  --forest-2: #5A7A64;
+  --forest-3: #EBF2ED;
+  --persimmon: #C2795C;
+  --persimmon-2: #D4957A;
+  --persimmon-3: #FAF0EB;
+  --cobalt: #5B739C;
+  --cobalt-2: #7A8FB3;
+  --cobalt-3: #EEF1F6;
+  --mustard: #B8943E;
+  --mustard-2: #D0AE5A;
+  --mustard-3: #F9F4E8;
 
-  /* Terracotta primary — darkened for AA on cream */
-  --primary: oklch(0.505 0.13 38);            /* ~#a14e33 */
-  --primary-foreground: oklch(0.98 0.008 85);
+  /* DESIGN.md brand accents */
+  --terracotta: #B26A4E; /* deepened from persimmon for AA on paper */
+  --deep-teal: #2F5D62;
 
-  --secondary: oklch(0.93 0.014 80);          /* warm paper shade */
-  --secondary-foreground: oklch(0.28 0.015 40);
+  /* shadcn semantic mapping — light */
+  --background: var(--paper);
+  --foreground: var(--ink);
 
-  --muted: oklch(0.94 0.012 80);
-  --muted-foreground: oklch(0.44 0.02 45);    /* AA on cream */
+  --card: var(--paper);
+  --card-foreground: var(--ink);
+  --popover: var(--paper);
+  --popover-foreground: var(--ink);
 
-  --accent: oklch(0.92 0.03 85);              /* soft mustard tint */
-  --accent-foreground: oklch(0.28 0.015 40);
+  --primary: var(--terracotta);
+  --primary-foreground: #FFFDF9;
 
-  --destructive: oklch(0.505 0.17 28);
-  --destructive-foreground: oklch(0.98 0.008 85);
+  --secondary: var(--cream);
+  --secondary-foreground: var(--ink);
 
-  /* Forest green — growth/success */
-  --success: oklch(0.47 0.06 155);            /* ~#4d6b58 darker for AA */
-  --success-foreground: oklch(0.98 0.008 85);
+  --muted: var(--cream);
+  --muted-foreground: #6F6355; /* AA on paper */
 
-  /* Muted mustard accent */
-  --warning: oklch(0.62 0.13 82);
-  --warning-foreground: oklch(0.22 0.012 40);
+  --accent: var(--persimmon-3);
+  --accent-foreground: var(--ink);
 
-  --border: oklch(0.88 0.015 75);
-  --input: oklch(0.88 0.015 75);
-  --ring: oklch(0.505 0.13 38);
+  --destructive: #B4432B;
+  --destructive-foreground: #FFFDF9;
 
-  --chart-1: oklch(0.505 0.13 38);            /* terracotta */
-  --chart-2: oklch(0.47 0.06 155);            /* forest */
-  --chart-3: oklch(0.62 0.13 82);             /* mustard */
-  --chart-4: oklch(0.55 0.08 55);             /* clay */
-  --chart-5: oklch(0.4 0.05 220);             /* dusk (used sparingly) */
+  --success: var(--forest);
+  --success-foreground: #FFFDF9;
 
-  --sidebar: oklch(0.96 0.01 85);
-  --sidebar-foreground: oklch(0.22 0.012 40);
-  --sidebar-primary: oklch(0.505 0.13 38);
-  --sidebar-primary-foreground: oklch(0.98 0.008 85);
-  --sidebar-accent: oklch(0.92 0.02 85);
-  --sidebar-accent-foreground: oklch(0.28 0.015 40);
-  --sidebar-border: oklch(0.88 0.015 75);
-  --sidebar-ring: oklch(0.505 0.13 38);
+  --warning: var(--mustard);
+  --warning-foreground: var(--ink);
+
+  --border: rgba(44, 36, 29, 0.12);
+  --input: rgba(44, 36, 29, 0.14);
+  --ring: var(--terracotta);
+
+  --chart-1: var(--persimmon);
+  --chart-2: var(--forest);
+  --chart-3: var(--cobalt);
+  --chart-4: var(--mustard);
+  --chart-5: var(--deep-teal);
+
+  --sidebar: var(--cream);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--terracotta);
+  --sidebar-primary-foreground: #FFFDF9;
+  --sidebar-accent: var(--persimmon-3);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: rgba(44, 36, 29, 0.12);
+  --sidebar-ring: var(--terracotta);
 }
 
 .dark {
-  --background: oklch(0.19 0.012 45);         /* deep ink paper */
-  --foreground: oklch(0.94 0.01 85);
-  --paper: oklch(0.19 0.012 45);
-  --ink: oklch(0.94 0.01 85);
+  /* DESIGN.md base — dark */
+  --paper: #1E1C19;
+  --cream: #252320;
+  --ink: #F5F0E8;
+  --headline: #F5F0E8;
 
-  --card: oklch(0.235 0.014 45);
-  --card-foreground: oklch(0.94 0.01 85);
-  --popover: oklch(0.235 0.014 45);
-  --popover-foreground: oklch(0.94 0.01 85);
+  /* DESIGN.md pillars — dark */
+  --forest: #5A7A64;
+  --forest-2: #7A9A84;
+  --forest-3: #1E2A22;
+  --persimmon: #D4957A;
+  --persimmon-2: #E0AE98;
+  --persimmon-3: #2A1E18;
+  --cobalt: #7A8FB3;
+  --cobalt-2: #96A8C6;
+  --cobalt-3: #1A1E28;
+  --mustard: #D0AE5A;
+  --mustard-2: #E0C47A;
+  --mustard-3: #2A2418;
 
-  --primary: oklch(0.7 0.13 38);              /* lifted terracotta for AA on dark */
-  --primary-foreground: oklch(0.19 0.012 45);
+  --terracotta: #D4957A;
+  --deep-teal: #5A9098;
 
-  --secondary: oklch(0.28 0.015 45);
-  --secondary-foreground: oklch(0.94 0.01 85);
+  /* shadcn semantic mapping — dark */
+  --background: var(--paper);
+  --foreground: var(--ink);
 
-  --muted: oklch(0.28 0.015 45);
-  --muted-foreground: oklch(0.78 0.014 80);
+  --card: var(--cream);
+  --card-foreground: var(--ink);
+  --popover: var(--cream);
+  --popover-foreground: var(--ink);
 
-  --accent: oklch(0.32 0.03 60);
-  --accent-foreground: oklch(0.94 0.01 85);
+  --primary: var(--terracotta);
+  --primary-foreground: #1E1C19;
 
-  --destructive: oklch(0.68 0.17 28);
-  --destructive-foreground: oklch(0.19 0.012 45);
+  --secondary: #2E2A25;
+  --secondary-foreground: var(--ink);
 
-  --success: oklch(0.72 0.08 155);
-  --success-foreground: oklch(0.19 0.012 45);
+  --muted: #2E2A25;
+  --muted-foreground: #A09888;
 
-  --warning: oklch(0.78 0.13 82);
-  --warning-foreground: oklch(0.19 0.012 45);
+  --accent: var(--persimmon-3);
+  --accent-foreground: var(--ink);
 
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.7 0.13 38);
+  --destructive: #D46A52;
+  --destructive-foreground: #1E1C19;
 
-  --chart-1: oklch(0.7 0.13 38);
-  --chart-2: oklch(0.72 0.08 155);
-  --chart-3: oklch(0.78 0.13 82);
-  --chart-4: oklch(0.65 0.08 55);
-  --chart-5: oklch(0.62 0.06 220);
+  --success: var(--forest);
+  --success-foreground: #1E1C19;
 
-  --sidebar: oklch(0.22 0.014 45);
-  --sidebar-foreground: oklch(0.94 0.01 85);
-  --sidebar-primary: oklch(0.7 0.13 38);
-  --sidebar-primary-foreground: oklch(0.19 0.012 45);
-  --sidebar-accent: oklch(0.28 0.015 45);
-  --sidebar-accent-foreground: oklch(0.94 0.01 85);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.7 0.13 38);
+  --warning: var(--mustard);
+  --warning-foreground: #1E1C19;
+
+  --border: rgba(245, 240, 232, 0.12);
+  --input: rgba(245, 240, 232, 0.15);
+  --ring: var(--terracotta);
+
+  --chart-1: var(--persimmon);
+  --chart-2: var(--forest);
+  --chart-3: var(--cobalt);
+  --chart-4: var(--mustard);
+  --chart-5: var(--deep-teal);
+
+  --sidebar: var(--cream);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--terracotta);
+  --sidebar-primary-foreground: #1E1C19;
+  --sidebar-accent: var(--persimmon-3);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: rgba(245, 240, 232, 0.10);
+  --sidebar-ring: var(--terracotta);
 }
 
 @layer base {
