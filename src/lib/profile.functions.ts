@@ -26,10 +26,7 @@ export const updateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => patchInput.parse(d))
   .handler(async ({ data, context }) => {
-    const { error } = await context.supabase
-      .from("profiles")
-      .update(data)
-      .eq("id", context.userId);
+    const { error } = await context.supabase.from("profiles").update(data).eq("id", context.userId);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -52,5 +49,14 @@ export const completeOnboarding = createServerFn({ method: "POST" })
       .update({ ...data, onboarding_completed_at: new Date().toISOString() })
       .eq("id", context.userId);
     if (error) throw new Error(error.message);
+    await context.supabase.from("events").insert({
+      user_id: context.userId,
+      name: "onboarding_completed",
+      payload: {
+        default_technique: data.default_technique,
+        default_duration: data.default_duration,
+        coach_tone: data.coach_tone,
+      } as never,
+    });
     return { ok: true };
   });

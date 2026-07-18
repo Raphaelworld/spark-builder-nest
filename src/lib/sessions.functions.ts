@@ -8,6 +8,7 @@ const startInput = z.object({
   planned_minutes: z.number().int().min(5).max(180),
   exam_mode: z.boolean().default(false),
   goal_id: z.string().uuid().nullable().optional(),
+  block_id: z.string().uuid().nullable().optional(),
 });
 
 export const startSession = createServerFn({ method: "POST" })
@@ -39,6 +40,16 @@ export const startSession = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
+
+    // Link the planner block that launched this session (enables planned-vs-actual).
+    if (data.block_id) {
+      await context.supabase
+        .from("planned_blocks")
+        .update({ session_id: row.id })
+        .eq("id", data.block_id)
+        .eq("user_id", context.userId);
+    }
+
     await context.supabase.from("events").insert({
       user_id: context.userId,
       name: "session_started",
@@ -48,6 +59,7 @@ export const startSession = createServerFn({ method: "POST" })
         planned_minutes: data.planned_minutes,
         exam_mode: data.exam_mode,
         goal_id: data.goal_id ?? null,
+        block_id: data.block_id ?? null,
       } as never,
     });
     return row;
@@ -85,6 +97,15 @@ export const addCheckin = createServerFn({ method: "POST" })
       kind: data.kind,
     });
     if (error) throw new Error(error.message);
+    await context.supabase.from("events").insert({
+      user_id: context.userId,
+      name: "checkin_logged",
+      payload: {
+        session_id: data.session_id,
+        kind: data.kind,
+        confidence: data.confidence,
+      } as never,
+    });
     return { ok: true };
   });
 

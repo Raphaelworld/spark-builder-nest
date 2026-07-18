@@ -246,9 +246,13 @@ spirit, though it adds a third schema-divergent table.
    ≤7 days, and turning it on inserts a calm-and-plan step before the timer (it no longer
    suppresses check-ins). Timer state also announces via `aria-live` (part of P1 item 4).
 
-**P3 — feature completeness**
-10. Set `planned_blocks.session_id` when a block launches a session; build planned-vs-actual
-    (week footer + weekly-review stat).
-11. Session history list and check-in confidence trend in Insights; wrap-up-rating-by-technique.
-12. Retake onboarding + appearance (system option) in Settings; pre-flight checklist in setup.
-13. Emit `checkin_logged`, `review_completed`, `onboarding_completed` events.
+**P3 — feature completeness** — ✅ **largely implemented on this branch**
+10. ✅ `planned_blocks.session_id` is set when a block launches a session; planned-vs-actual
+    shown in the Planner header and as a weekly-review stat.
+11. ✅ Session history list (expandable rows with tags and notes) and check-in confidence trend
+    in Insights. Wrap-up-rating-by-technique remains open.
+12. ✅ Retake onboarding + appearance (light/dark/system) in Settings. (Pre-flight checklist
+    shipped with the P2 work.)
+13. ✅ `checkin_logged`, `review_completed`, and `onboarding_completed` events emitted
+    server-side. Also: pulse dimensions renamed to the PRD's six SRL dimensions (planning,
+    focus, resilience, confidence, environment, help-seeking).

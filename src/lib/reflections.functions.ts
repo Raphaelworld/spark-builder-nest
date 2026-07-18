@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
 
 function isoDate(d: Date): string {
@@ -36,20 +38,20 @@ function actualMinutes(s: SessionRow): number {
   return s.planned_minutes ?? 0;
 }
 
-async function computeWeekStats(
-  supabase: any,
-  userId: string,
-  start: Date,
-) {
+async function computeWeekStats(supabase: SupabaseClient<Database>, userId: string, start: Date) {
   const end = new Date(start);
   end.setDate(end.getDate() + 7);
-  const { data, error } = await supabase
-    .from("sessions")
-    .select("status, started_at, ended_at, planned_minutes, focus_rating")
-    .eq("user_id", userId)
-    .gte("started_at", start.toISOString())
-    .lt("started_at", end.toISOString());
+  const [{ data, error }, { data: blocks, error: bErr }] = await Promise.all([
+    supabase
+      .from("sessions")
+      .select("status, started_at, ended_at, planned_minutes, focus_rating")
+      .eq("user_id", userId)
+      .gte("started_at", start.toISOString())
+      .lt("started_at", end.toISOString()),
+    supabase.from("planned_blocks").select("planned_minutes").eq("user_id", userId),
+  ]);
   if (error) throw new Error(error.message);
+  if (bErr) throw new Error(bErr.message);
   const rows = (data ?? []) as SessionRow[];
   const completed = rows.filter((r) => r.status === "completed");
   const minutes = completed.reduce((s, r) => s + actualMinutes(r), 0);
@@ -57,9 +59,15 @@ async function computeWeekStats(
   const avgFocus = ratings.length
     ? Math.round((ratings.reduce((a, b) => a + b, 0) / ratings.length) * 10) / 10
     : 0;
+  // Blocks are a weekly template, so their sum is this week's plan.
+  const plannedMinutes = ((blocks ?? []) as { planned_minutes: number }[]).reduce(
+    (s, b) => s + b.planned_minutes,
+    0,
+  );
   return {
     sessions: completed.length,
     minutes,
+    plannedMinutes,
     abandoned: rows.filter((r) => r.status === "abandoned").length,
     avgFocus,
   };
@@ -126,18 +134,25 @@ export const saveWeeklyReview = createServerFn({ method: "POST" })
       .select("id, week_start, went_well, next_focus, stats")
       .single();
     if (error) throw new Error(error.message);
+    await context.supabase.from("events").insert({
+      user_id: context.userId,
+      name: "review_completed",
+      payload: { week_start: startKey } as never,
+    });
     return row;
   });
 
 // ---- Monthly pulses ----
 
+// The PRD's six SRL dimensions (F4): planning ahead, staying focused,
+// bouncing back from setbacks, confidence, study environment, asking for help.
 const pulseSchema = z.object({
-  energy: z.number().int().min(1).max(10),
-  motivation: z.number().int().min(1).max(10),
-  clarity: z.number().int().min(1).max(10),
-  progress: z.number().int().min(1).max(10),
-  balance: z.number().int().min(1).max(10),
+  planning: z.number().int().min(1).max(10),
+  focus: z.number().int().min(1).max(10),
+  resilience: z.number().int().min(1).max(10),
   confidence: z.number().int().min(1).max(10),
+  environment: z.number().int().min(1).max(10),
+  help_seeking: z.number().int().min(1).max(10),
   note: z.string().trim().max(500).optional().default(""),
 });
 
@@ -180,12 +195,12 @@ export const savePulse = createServerFn({ method: "POST" })
         {
           user_id: context.userId,
           month_start: startKey,
-          energy: data.energy,
-          motivation: data.motivation,
-          clarity: data.clarity,
-          progress: data.progress,
-          balance: data.balance,
+          planning: data.planning,
+          focus: data.focus,
+          resilience: data.resilience,
           confidence: data.confidence,
+          environment: data.environment,
+          help_seeking: data.help_seeking,
           note: data.note || null,
         },
         { onConflict: "user_id,month_start" },

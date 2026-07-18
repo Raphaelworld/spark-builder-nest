@@ -29,6 +29,7 @@ const sessionSearch = z.object({
   technique: z.enum(["pomodoro", "deep_work", "active_recall"]).optional(),
   minutes: z.coerce.number().int().min(5).max(240).optional(),
   goal_id: z.string().uuid().optional(),
+  block_id: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/session")({
@@ -168,6 +169,7 @@ function SetupView() {
           planned_minutes: minutes,
           exam_mode: examMode,
           goal_id: goalId || null,
+          block_id: search.block_id ?? null,
         },
       }),
     onSuccess: () => {

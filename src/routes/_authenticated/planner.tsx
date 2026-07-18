@@ -2,13 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import {
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { useHotkeys } from "react-hotkeys-hook";
 import { Download, Plus, Command as CommandIcon } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -18,15 +12,13 @@ import {
   plannedBlocksQueryOptions,
   unscheduledTasksQueryOptions,
 } from "@/lib/planner-queries";
+import { weeklyReviewQueryOptions } from "@/lib/reflections-queries";
 import {
   createPlannedBlock,
   deletePlannedBlock,
   updatePlannedBlock,
 } from "@/lib/planner.functions";
-import {
-  createUnscheduledTask,
-  deleteUnscheduledTask,
-} from "@/lib/unscheduled.functions";
+import { createUnscheduledTask, deleteUnscheduledTask } from "@/lib/unscheduled.functions";
 import { logEvent } from "@/lib/events.functions";
 import { WeekGrid, type PlannedBlock } from "@/components/planner/week-grid";
 import { TaskTray } from "@/components/planner/task-tray";
@@ -49,19 +41,23 @@ export const Route = createFileRoute("/_authenticated/planner")({
     context.queryClient.ensureQueryData(plannedBlocksQueryOptions());
     context.queryClient.ensureQueryData(goalsQueryOptions());
     context.queryClient.ensureQueryData(unscheduledTasksQueryOptions());
+    context.queryClient.ensureQueryData(weeklyReviewQueryOptions());
   },
   head: () => ({
     meta: [
       { title: "Planner — Gobez" },
       {
         name: "description",
-        content: "Drag focus blocks onto your week, capture intents, and start sessions from your plan.",
+        content:
+          "Drag focus blocks onto your week, capture intents, and start sessions from your plan.",
       },
     ],
   }),
   errorComponent: ({ error }) => (
     <AppShell>
-      <p role="alert" className="text-destructive">{error.message}</p>
+      <p role="alert" className="text-destructive">
+        {error.message}
+      </p>
     </AppShell>
   ),
   component: PlannerPage,
@@ -73,6 +69,7 @@ function PlannerPage() {
   const { data: blocks = [] } = useQuery(plannedBlocksQueryOptions());
   const { data: goals = [] } = useQuery(goalsQueryOptions());
   const { data: tasks = [] } = useQuery(unscheduledTasksQueryOptions());
+  const { data: weekly } = useQuery(weeklyReviewQueryOptions());
 
   const [editor, setEditor] = useState<{ open: boolean; value: BlockEditorValue | null }>({
     open: false,
@@ -116,14 +113,16 @@ function PlannerPage() {
   });
 
   const updateMut = useMutation({
-    mutationFn: (v: { id: string; patch: Partial<Omit<BlockEditorValue, "id">> & { end_minute?: number } }) =>
-      updateFn({ data: v as never }),
+    mutationFn: (v: {
+      id: string;
+      patch: Partial<Omit<BlockEditorValue, "id">> & { end_minute?: number };
+    }) => updateFn({ data: v as never }),
     // optimistic update
     onMutate: async (v) => {
       await qc.cancelQueries({ queryKey: ["plannedBlocks"] });
       const prev = qc.getQueryData<PlannedBlock[]>(["plannedBlocks"]);
       qc.setQueryData<PlannedBlock[]>(["plannedBlocks"], (list) =>
-        (list ?? []).map((b) => (b.id === v.id ? { ...b, ...v.patch } as PlannedBlock : b)),
+        (list ?? []).map((b) => (b.id === v.id ? ({ ...b, ...v.patch } as PlannedBlock) : b)),
       );
       return { prev };
     },
@@ -148,15 +147,10 @@ function PlannerPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["unscheduledTasks"] }),
   });
 
-  const totalPlanned = useMemo(
-    () => blocks.reduce((s, b) => s + b.planned_minutes, 0),
-    [blocks],
-  );
+  const totalPlanned = useMemo(() => blocks.reduce((s, b) => s + b.planned_minutes, 0), [blocks]);
 
   // Sensors: small distance so click-open still works and pointer down on empty grid does not begin block drag.
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-  );
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over, delta } = event;
@@ -165,7 +159,16 @@ function PlannerPage() {
     if (overData?.kind !== "day") return;
     const activeData = active.data.current as
       | { kind: "block"; block: PlannedBlock }
-      | { kind: "task"; task: { id: string; title: string; goal_id: string | null; technique: string; planned_minutes: number } }
+      | {
+          kind: "task";
+          task: {
+            id: string;
+            title: string;
+            goal_id: string | null;
+            technique: string;
+            planned_minutes: number;
+          };
+        }
       | undefined;
     if (!activeData) return;
 
@@ -264,6 +267,7 @@ function PlannerPage() {
         technique: b.technique as TechniqueId,
         minutes: b.planned_minutes,
         goal_id: b.goal_id ?? undefined,
+        block_id: b.id,
       } as never,
     });
   }
@@ -299,7 +303,11 @@ function PlannerPage() {
       start.setMinutes(b.start_minute);
       const end = new Date(start);
       end.setMinutes(start.getMinutes() + b.planned_minutes);
-      const fmtDt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+      const fmtDt = (d: Date) =>
+        d
+          .toISOString()
+          .replace(/[-:]/g, "")
+          .replace(/\.\d{3}/, "");
       lines.push(
         "BEGIN:VEVENT",
         `UID:${b.id}@gobez`,
@@ -326,14 +334,18 @@ function PlannerPage() {
     setPaletteOpen(true);
     track("planner_palette_opened");
   });
-  useHotkeys("n", () => {
-    const d = new Date();
-    openCreate(
-      jsDayToIdx(d.getDay()),
-      snap(d.getHours() * 60 + d.getMinutes()),
-      snap(d.getHours() * 60 + d.getMinutes()) + 25,
-    );
-  }, { enableOnFormTags: false });
+  useHotkeys(
+    "n",
+    () => {
+      const d = new Date();
+      openCreate(
+        jsDayToIdx(d.getDay()),
+        snap(d.getHours() * 60 + d.getMinutes()),
+        snap(d.getHours() * 60 + d.getMinutes()) + 25,
+      );
+    },
+    { enableOnFormTags: false },
+  );
 
   return (
     <AppShell wide>
@@ -344,14 +356,19 @@ function PlannerPage() {
               <h1 className="font-serif text-3xl md:text-4xl">Planner</h1>
               <p className="text-sm text-muted-foreground">
                 Drag to plan. Drop tasks from the tray. Press{" "}
-                <kbd className="rounded border border-border bg-muted px-1 text-[10px]">⌘K</kbd> for quick add.
+                <kbd className="rounded border border-border bg-muted px-1 text-[10px]">⌘K</kbd> for
+                quick add.
               </p>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-muted-foreground">{totalPlanned} min planned</span>
+                <span className="text-muted-foreground">
+                  {totalPlanned} min planned
+                  {weekly ? ` · ${weekly.liveStats.minutes} min focused this week` : ""}
+                </span>
                 <Button variant="outline" size="sm" onClick={() => setPaletteOpen(true)}>
-                  <CommandIcon className="mr-1.5 h-3.5 w-3.5" />Quick add
+                  <CommandIcon className="mr-1.5 h-3.5 w-3.5" />
+                  Quick add
                 </Button>
                 <Button
                   size="sm"
@@ -361,7 +378,8 @@ function PlannerPage() {
                     openCreate(jsDayToIdx(d.getDay()), now, now + 25);
                   }}
                 >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />New block
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  New block
                 </Button>
               </div>
               <Button
