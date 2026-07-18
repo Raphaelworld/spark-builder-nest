@@ -8,7 +8,7 @@
  * Gobez palette — sourced from DESIGN.md.
  * Base: paper/cream/ink + headline + muted-foreground.
  * Pillar accents (decorative only in Gobez): Forest, Persimmon, Cobalt, Mustard.
- * Brand accents: Terracotta (CTA), Deep Teal (secondary).
+ * Brand accents: Terracotta (CTA), Deep Teal (support), Violet (secondary).
  */
 
 @theme inline {
@@ -74,6 +74,12 @@
   --color-terracotta: var(--terracotta);
   --color-deep-teal: var(--deep-teal);
 
+  /* Secondary violet accent */
+  --color-violet: var(--violet);
+  --color-violet-2: var(--violet-2);
+  --color-violet-3: var(--violet-3);
+
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -116,6 +122,12 @@
   --terracotta: #07A081; /* Primary teal */
   --deep-teal: #2F5D62;
 
+  /* Secondary violet accent */
+  --violet: #563ACC;
+  --violet-2: #7B5FD9;
+  --violet-3: #EDE9FE;
+
+
   /* shadcn semantic mapping — light */
   --background: var(--paper);
   --foreground: var(--ink);
@@ -128,14 +140,15 @@
   --primary: var(--terracotta);
   --primary-foreground: #1E1814;
 
-  --secondary: var(--cream);
-  --secondary-foreground: var(--ink);
+  --secondary: var(--violet);
+  --secondary-foreground: #FFFFFF;
 
   --muted: var(--cream);
   --muted-foreground: #6F6355; /* AA on paper */
 
-  --accent: var(--persimmon-3);
+  --accent: var(--violet-3);
   --accent-foreground: var(--ink);
+
 
   --destructive: #B4432B;
   --destructive-foreground: #FFFDF9;
@@ -151,17 +164,18 @@
   --ring: var(--terracotta);
 
   --chart-1: var(--persimmon);
-  --chart-2: var(--forest);
-  --chart-3: var(--cobalt);
-  --chart-4: var(--mustard);
-  --chart-5: var(--deep-teal);
+  --chart-2: var(--violet);
+  --chart-3: var(--forest);
+  --chart-4: var(--cobalt);
+  --chart-5: var(--mustard);
 
   --sidebar: var(--cream);
   --sidebar-foreground: var(--ink);
   --sidebar-primary: var(--terracotta);
   --sidebar-primary-foreground: #FFFDF9;
-  --sidebar-accent: var(--persimmon-3);
+  --sidebar-accent: var(--violet-3);
   --sidebar-accent-foreground: var(--ink);
+
   --sidebar-border: rgba(44, 36, 29, 0.12);
   --sidebar-ring: var(--terracotta);
 }
@@ -190,7 +204,13 @@
   --terracotta: #07A081;
   --deep-teal: #5A9098;
 
+  /* Secondary violet accent — dark */
+  --violet: #6C5CE7;
+  --violet-2: #9B8AEF;
+  --violet-3: #2A1F4D;
+
   /* shadcn semantic mapping — dark */
+
   --background: var(--paper);
   --foreground: var(--ink);
 
@@ -202,13 +222,13 @@
   --primary: var(--terracotta);
   --primary-foreground: #1E1C19;
 
-  --secondary: #2E2A25;
-  --secondary-foreground: var(--ink);
+  --secondary: var(--violet);
+  --secondary-foreground: #FFFFFF;
 
   --muted: #2E2A25;
   --muted-foreground: #A09888;
 
-  --accent: var(--persimmon-3);
+  --accent: var(--violet-3);
   --accent-foreground: var(--ink);
 
   --destructive: #D46A52;
@@ -225,19 +245,20 @@
   --ring: var(--terracotta);
 
   --chart-1: var(--persimmon);
-  --chart-2: var(--forest);
-  --chart-3: var(--cobalt);
-  --chart-4: var(--mustard);
-  --chart-5: var(--deep-teal);
+  --chart-2: var(--violet);
+  --chart-3: var(--forest);
+  --chart-4: var(--cobalt);
+  --chart-5: var(--mustard);
 
   --sidebar: var(--cream);
   --sidebar-foreground: var(--ink);
   --sidebar-primary: var(--terracotta);
   --sidebar-primary-foreground: #1E1C19;
-  --sidebar-accent: var(--persimmon-3);
+  --sidebar-accent: var(--violet-3);
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: rgba(245, 240, 232, 0.10);
   --sidebar-ring: var(--terracotta);
+
 }
 
 @layer base {
