@@ -102,9 +102,9 @@
   --forest: #3D5A46;
   --forest-2: #5A7A64;
   --forest-3: #EBF2ED;
-  --persimmon: #C2795C;
-  --persimmon-2: #D4957A;
-  --persimmon-3: #FAF0EB;
+  --persimmon: #F37037;
+  --persimmon-2: #F58A5A;
+  --persimmon-3: #FEEDE3;
   --cobalt: #5B739C;
   --cobalt-2: #7A8FB3;
   --cobalt-3: #EEF1F6;
@@ -113,7 +113,7 @@
   --mustard-3: #F9F4E8;
 
   /* DESIGN.md brand accents */
-  --terracotta: #B26A4E; /* deepened from persimmon for AA on paper */
+  --terracotta: #F37037; /* GlobalLogic brand orange */
   --deep-teal: #2F5D62;
 
   /* shadcn semantic mapping — light */
@@ -126,7 +126,7 @@
   --popover-foreground: var(--ink);
 
   --primary: var(--terracotta);
-  --primary-foreground: #FFFDF9;
+  --primary-foreground: #1E1814;
 
   --secondary: var(--cream);
   --secondary-foreground: var(--ink);
@@ -177,9 +177,9 @@
   --forest: #5A7A64;
   --forest-2: #7A9A84;
   --forest-3: #1E2A22;
-  --persimmon: #D4957A;
-  --persimmon-2: #E0AE98;
-  --persimmon-3: #2A1E18;
+  --persimmon: #F58A5A;
+  --persimmon-2: #F7A582;
+  --persimmon-3: #2A1810;
   --cobalt: #7A8FB3;
   --cobalt-2: #96A8C6;
   --cobalt-3: #1A1E28;
@@ -187,7 +187,7 @@
   --mustard-2: #E0C47A;
   --mustard-3: #2A2418;
 
-  --terracotta: #D4957A;
+  --terracotta: #F37037;
   --deep-teal: #5A9098;
 
   /* shadcn semantic mapping — dark */
