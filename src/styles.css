@@ -164,17 +164,18 @@
   --ring: var(--terracotta);
 
   --chart-1: var(--persimmon);
-  --chart-2: var(--forest);
-  --chart-3: var(--cobalt);
-  --chart-4: var(--mustard);
-  --chart-5: var(--deep-teal);
+  --chart-2: var(--violet);
+  --chart-3: var(--forest);
+  --chart-4: var(--cobalt);
+  --chart-5: var(--mustard);
 
   --sidebar: var(--cream);
   --sidebar-foreground: var(--ink);
   --sidebar-primary: var(--terracotta);
   --sidebar-primary-foreground: #FFFDF9;
-  --sidebar-accent: var(--persimmon-3);
+  --sidebar-accent: var(--violet-3);
   --sidebar-accent-foreground: var(--ink);
+
   --sidebar-border: rgba(44, 36, 29, 0.12);
   --sidebar-ring: var(--terracotta);
 }
