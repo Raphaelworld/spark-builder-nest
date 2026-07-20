@@ -1,0 +1,38 @@
+# Render Blueprint — deploys this TanStack Start app as a single free-tier web service.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Free tier notes:
+#   - `plan: free` web services get 512 MB RAM / 0.1 CPU and spin down after
+#     ~15 minutes of inactivity (first request after idle takes ~30-60s).
+#   - Free instance hours are shared across the workspace (750 hrs/month).
+services:
+  - type: web
+    name: spark-builder-nest
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: node .output/server/index.mjs
+    healthCheckPath: /
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # The Lovable vite config defaults nitro to the Cloudflare preset;
+      # Render runs plain Node, so force the node-server preset at build time.
+      - key: NITRO_PRESET
+        value: node-server
+      # Supabase publishable credentials — these are public client-side values
+      # (already shipped in the browser bundle and tracked in .env).
+      - key: VITE_SUPABASE_URL
+        value: https://vufetmajtqkllakdofgr.supabase.co
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_v6jl_G8KXzUu9ovXSkxsLA_QFvijrKG
+      - key: VITE_SUPABASE_PROJECT_ID
+        value: vufetmajtqkllakdofgr
+      # SSR fallbacks (src/integrations/supabase/client.ts reads these via process.env)
+      - key: SUPABASE_URL
+        value: https://vufetmajtqkllakdofgr.supabase.co
+      - key: SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_v6jl_G8KXzUu9ovXSkxsLA_QFvijrKG
+      - key: SUPABASE_PROJECT_ID
+        value: vufetmajtqkllakdofgr
