@@ -32,11 +32,7 @@ export const listGoals = createServerFn({ method: "GET" })
       if (!s.goal_id) continue;
       const cur = stats.get(s.goal_id) ?? { sessions: 0, minutes: 0 };
       const mins = s.ended_at
-        ? Math.round(
-            (new Date(s.ended_at).getTime() -
-              new Date(s.started_at).getTime()) /
-              60000,
-          )
+        ? Math.round((new Date(s.ended_at).getTime() - new Date(s.started_at).getTime()) / 60000)
         : s.planned_minutes;
       stats.set(s.goal_id, {
         sessions: cur.sessions + 1,

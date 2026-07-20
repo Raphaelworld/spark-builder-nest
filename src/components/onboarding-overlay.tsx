@@ -45,11 +45,7 @@ export function OnboardingOverlay() {
   if (isLoading || !profile || profile.onboarding_completed_at) return null;
 
   const totalSteps = 4;
-  const canNext =
-    (step === 0 && name.trim().length > 0) ||
-    step === 1 ||
-    step === 2 ||
-    step === 3;
+  const canNext = (step === 0 && name.trim().length > 0) || step === 1 || step === 2 || step === 3;
 
   const finish = () => {
     mutation.mutate({

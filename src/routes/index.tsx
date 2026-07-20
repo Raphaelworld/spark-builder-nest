@@ -18,8 +18,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Gobez — a calm focus companion" },
       {
         property: "og:description",
-        content:
-          "Plan a session, work through it, wrap it up — every day. No forms, no jargon.",
+        content: "Plan a session, work through it, wrap it up — every day. No forms, no jargon.",
       },
     ],
   }),
@@ -47,8 +46,8 @@ function Landing() {
           Plan a session. Focus. Wrap it up.
         </h1>
         <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-          Gobez is a warm, editorial daily companion for the way you actually
-          study. Taps, timers, and one-line prompts — never another worksheet.
+          Gobez is a warm, editorial daily companion for the way you actually study. Taps, timers,
+          and one-line prompts — never another worksheet.
         </p>
         <div className="mt-10 flex flex-wrap gap-3">
           <Link

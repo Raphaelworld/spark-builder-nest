@@ -119,7 +119,7 @@ export function computeCoachNudges({
   if (insights && insights.totals.sessions >= 5) {
     const bestStart = insights.bestHour;
     const bestEnd = (insights.bestHour + 3) % 24;
-    if (hour >= bestStart && hour < (bestStart + 3) % 24 + (bestStart + 3 >= 24 ? 24 : 0)) {
+    if (hour >= bestStart && hour < ((bestStart + 3) % 24) + (bestStart + 3 >= 24 ? 24 : 0)) {
       nudges.push({
         id: "best-hour-now",
         tone: "info",

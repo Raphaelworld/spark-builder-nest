@@ -3,10 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Sparkles, Flame, Info, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { profileQueryOptions } from "@/lib/profile-queries";
-import {
-  activeSessionQueryOptions,
-  todaySummaryQueryOptions,
-} from "@/lib/session-queries";
+import { activeSessionQueryOptions, todaySummaryQueryOptions } from "@/lib/session-queries";
 import { insightsQueryOptions } from "@/lib/insights-queries";
 import { computeCoachNudges, type CoachNudge } from "@/lib/coach";
 
