@@ -118,9 +118,9 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
 
       {/* Desktop top navigation */}
       <header className="fixed inset-x-0 top-0 z-30 hidden h-16 items-center justify-between border-b border-deep-teal bg-deep-teal px-6 text-white md:flex">
-        <Logo onTeal />
+        <div className="flex items-center gap-4">
+          <Logo onTeal />
 
-        <div className="flex items-center gap-2">
           <nav className="flex items-center gap-1" aria-label="Primary">
             {NAV.map(({ to, label, icon: Icon }) => {
               const active = pathname === to || pathname.startsWith(to + "/");
@@ -141,7 +141,9 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
               );
             })}
           </nav>
+        </div>
 
+        <div className="flex items-center gap-2">
           <button
             onClick={toggle}
             aria-label="Toggle theme"
