@@ -32,6 +32,11 @@ export default tseslint.config(
           ],
         },
       ],
+      // New rules in eslint-plugin-react-hooks 7 that flag long-standing
+      // patterns across the app; surfaced as warnings until the code is
+      // migrated rather than blocking CI.
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/purity": "warn",
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
     },
