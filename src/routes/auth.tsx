@@ -98,7 +98,11 @@ function AuthPageBody() {
   };
 
   const heading =
-    mode === "signin" ? "Welcome back" : mode === "signup" ? "Start focusing" : "Reset your password";
+    mode === "signin"
+      ? "Welcome back"
+      : mode === "signup"
+        ? "Start focusing"
+        : "Reset your password";
   const sub =
     mode === "signin"
       ? "Sign in to pick up where you left off."

@@ -15,15 +15,15 @@ hard away from the PRD §7 palette** (teal + violet instead of terracotta/cream,
 failures), and there are **data-rights gaps** (export/delete miss three tables; two tables can
 orphan rows after account deletion).
 
-| Phase | Scope | Status |
-|---|---|---|
-| P0 | Shell, theme, dark mode | ⚠️ Built, but palette contradicts PRD §7 |
-| P1 | Supabase, auth, profiles, RLS | ✅ Complete |
-| P2 | Focus session core loop | ⚠️ Loop works; several §4 requirements missing |
-| P3 | Planner & Goals | ⚠️ Strong build; block↔session link + planned-vs-actual missing |
-| P4 | Insights & rituals | ⚠️ Built; session history + confidence trend missing |
-| P5 | Coach & onboarding | ⚠️ Coach/evidence/onboarding built; reframe & stuck flows missing |
-| P6 | Polish & launch | ⚠️ Settings/export/delete built; gaps in coverage, a11y, events |
+| Phase | Scope                         | Status                                                            |
+| ----- | ----------------------------- | ----------------------------------------------------------------- |
+| P0    | Shell, theme, dark mode       | ⚠️ Built, but palette contradicts PRD §7                          |
+| P1    | Supabase, auth, profiles, RLS | ✅ Complete                                                       |
+| P2    | Focus session core loop       | ⚠️ Loop works; several §4 requirements missing                    |
+| P3    | Planner & Goals               | ⚠️ Strong build; block↔session link + planned-vs-actual missing   |
+| P4    | Insights & rituals            | ⚠️ Built; session history + confidence trend missing              |
+| P5    | Coach & onboarding            | ⚠️ Coach/evidence/onboarding built; reframe & stuck flows missing |
+| P6    | Polish & launch               | ⚠️ Settings/export/delete built; gaps in coverage, a11y, events   |
 
 ---
 
@@ -39,18 +39,18 @@ display type, rounded-2xl/soft-shadow editorial styling.
 1. **Palette drift (contradicts PRD §7 and §1.2).** The token named `--terracotta` is defined as
    **teal `#07A081`** and a **violet `#563ACC`** secondary was added (`src/styles.css:124-129`).
    The PRD requires cream `#faf8f3`-family backgrounds, terracotta primary darkened to
-   `#a14e33`-class, forest green success, and explicitly says *"Never indigo/generic-SaaS
-   blue."* A violet/indigo secondary and teal primary are exactly the SaaS look §1.2 warns
+   `#a14e33`-class, forest green success, and explicitly says _"Never indigo/generic-SaaS
+   blue."_ A violet/indigo secondary and teal primary are exactly the SaaS look §1.2 warns
    against. The light background is plain `#FFFFFF`, not the cream paper family.
 2. **WCAG AA failures (PRD §6, success criterion §9).**
-   - `--primary` `#07A081` as *text* on white = **3.30:1** — fails AA (4.5:1) for normal text.
+   - `--primary` `#07A081` as _text_ on white = **3.30:1** — fails AA (4.5:1) for normal text.
      `text-primary` is used at body size across the app (links, chips, hints, goal deadline
      labels, coach actions).
    - `--warning` mustard `#B8943E` on white = **2.86:1** — fails even the 3:1 large-text bar
      where used as icon/text color (e.g. streak flame on Today).
    - Button fills pass (ink-on-teal 5.31:1; dark mode 5.14:1).
-   This repeats the exact v1 failure mode the PRD calls out ("dashboard labels and primary
-   buttons").
+     This repeats the exact v1 failure mode the PRD calls out ("dashboard labels and primary
+     buttons").
 3. Desktop nav is a top bar, not the "slim left icon rail" in §3 — minor.
 
 ## Phase 1 — Supabase, auth, profiles
@@ -97,9 +97,9 @@ a new session auto-abandons a lingering active one (reason `replaced`) — a sen
    as a low-priority coach nudge.
 8. **Setup ignores onboarding defaults.** `default_technique` / `default_duration` from the
    profile are never read; setup always starts at Pomodoro/25 unless URL params override.
-9. **Exam mode semantics are inverted.** PRD: a toggle that *appears only* when a tagged goal's
-   deadline is ≤7 days and *adds* a brief calm/plan step before the timer. Implementation: an
-   always-visible toggle that *suppresses* check-ins (it does auto-enable when a deadline is
+9. **Exam mode semantics are inverted.** PRD: a toggle that _appears only_ when a tagged goal's
+   deadline is ≤7 days and _adds_ a brief calm/plan step before the timer. Implementation: an
+   always-visible toggle that _suppresses_ check-ins (it does auto-enable when a deadline is
    near). No calm/plan step exists.
 10. **No completion celebration** (streak/garden animation, §4.3) and **no `aria-live`
     announcements** for timer state anywhere (§6, Prompt 6.2).
@@ -112,7 +112,7 @@ duration is a slider rather than a stepper.
 
 **Done:** Planner is the most polished surface — drag-and-drop week grid (dnd-kit), task tray,
 ⌘K quick-add palette, block editor, duplicate/resize/move, "Start session" pre-fills setup via
-URL params, `.ics` export, planner analytics events. Goals: ≤3 active enforced in UI *and* DB
+URL params, `.ics` export, planner analytics events. Goals: ≤3 active enforced in UI _and_ DB
 trigger, mastery-phrasing nudge ("Phrase it as mastery, not a task"), optional deadline, archive
 (not delete) flow, per-goal auto-computed sessions/minutes, goal chips in session setup, deadline
 ≤7 days highlighted.
@@ -168,14 +168,14 @@ screens (name, technique, duration, tone) → writes profile defaults + `onboard
 1. **Reframe moment does not exist** (trigger on check-in confidence ≤2 or wrap-up rating ≤2 →
    catch-the-thought chips → reframe). Nothing in the codebase implements it.
 2. **Stuck helper/composer does not exist** (compose a specific question with copy/mailto).
-   Together with #1 this means v1 tools 5 and 8 are effectively *cut*, not absorbed as the
+   Together with #1 this means v1 tools 5 and 8 are effectively _cut_, not absorbed as the
    consolidation map requires.
 3. **Retake onboarding from Settings is missing** (required by F6 and Prompt 5.1/6.1).
 4. Onboarding is a preferences picker, not the 90-second diagnostic quiz (how they plan, focus,
    handle setbacks); the name step is a text field (PRD: tappable answers, no text fields).
    Defensible simplification, but the profile defaults it sets are then never used by session
    setup (see Phase 2 gap #8), so the personalization loop is broken end-to-end.
-5. Evidence subtleties: captured for *all* worked tags (PRD: with high-rated sessions), no
+5. Evidence subtleties: captured for _all_ worked tags (PRD: with high-rated sessions), no
    `surfaced_count`, surfacing is by recency rather than "before a similar session (same goal or
    technique)."
 6. `coach-boost` edge function not built — explicitly optional in PRD §5.4, fine to skip.
@@ -216,16 +216,17 @@ spirit, though it adds a third schema-divergent table.
 
 ## Success criteria (PRD §9)
 
-| Criterion | Status |
-|---|---|
-| Onboarding → first full session < 10 min | ✅ Plausible — flow is short and unblocked |
-| Loop completion rate measurable from `events` day one | ✅ started/completed/abandoned all logged |
-| Zero screens that read as a form (>2 stacked labeled inputs) | ✅ Holds on every screen audited |
-| All AA contrast checks pass; keyboard-only loop succeeds | ❌ `text-primary` 3.30:1 and warning 2.86:1 fail; no `aria-live` |
+| Criterion                                                    | Status                                                           |
+| ------------------------------------------------------------ | ---------------------------------------------------------------- |
+| Onboarding → first full session < 10 min                     | ✅ Plausible — flow is short and unblocked                       |
+| Loop completion rate measurable from `events` day one        | ✅ started/completed/abandoned all logged                        |
+| Zero screens that read as a form (>2 stacked labeled inputs) | ✅ Holds on every screen audited                                 |
+| All AA contrast checks pass; keyboard-only loop succeeds     | ❌ `text-primary` 3.30:1 and warning 2.86:1 fail; no `aria-live` |
 
 ## Prioritized fix list
 
 **P1 — correctness, privacy, a11y**
+
 1. Add `weekly_reviews`, `pulses`, `unscheduled_tasks` to export **and** delete; add
    `REFERENCES auth.users(id) ON DELETE CASCADE` to `weekly_reviews.user_id` / `pulses.user_id`.
 2. Fix AA contrast: darken the primary token for text use (or split text-vs-fill tokens) and the
@@ -234,25 +235,16 @@ spirit, though it adds a third schema-divergent table.
    as written — either restore terracotta/cream or amend the PRD.
 4. Add `aria-live` announcements for timer start/checkpoint/end.
 
-**P2 — core-loop completeness (PRD §4)** — ✅ **implemented on this branch**
-5. ✅ Pause/extend controls (persisted `paused_at`/`paused_ms`, survives refresh); auto check-in
-   prompts at interval midpoints with optional 140-char note; break prompts per technique.
-6. ✅ Stuck flow (3-line help composer with copy/mailto) and reframe moment (check-in
-   confidence ≤2 or wrap-up rating ≤2 → catch-the-thought chips → reframe).
-7. ✅ Abandon "why" chips (shared dialog) and an explicit End-early path on the focus screen.
-8. ✅ Setup uses profile defaults, shows recent-task suggestion chips, and surfaces the last
-   `next_time_note` as the seed for the next session.
-9. ✅ Exam mode aligned with the PRD: toggle only appears when the tagged goal's deadline is
-   ≤7 days, and turning it on inserts a calm-and-plan step before the timer (it no longer
-   suppresses check-ins). Timer state also announces via `aria-live` (part of P1 item 4).
+**P2 — core-loop completeness (PRD §4)** — ✅ **implemented on this branch** 5. ✅ Pause/extend controls (persisted `paused_at`/`paused_ms`, survives refresh); auto check-in
+prompts at interval midpoints with optional 140-char note; break prompts per technique. 6. ✅ Stuck flow (3-line help composer with copy/mailto) and reframe moment (check-in
+confidence ≤2 or wrap-up rating ≤2 → catch-the-thought chips → reframe). 7. ✅ Abandon "why" chips (shared dialog) and an explicit End-early path on the focus screen. 8. ✅ Setup uses profile defaults, shows recent-task suggestion chips, and surfaces the last
+`next_time_note` as the seed for the next session. 9. ✅ Exam mode aligned with the PRD: toggle only appears when the tagged goal's deadline is
+≤7 days, and turning it on inserts a calm-and-plan step before the timer (it no longer
+suppresses check-ins). Timer state also announces via `aria-live` (part of P1 item 4).
 
-**P3 — feature completeness** — ✅ **largely implemented on this branch**
-10. ✅ `planned_blocks.session_id` is set when a block launches a session; planned-vs-actual
-    shown in the Planner header and as a weekly-review stat.
-11. ✅ Session history list (expandable rows with tags and notes) and check-in confidence trend
-    in Insights. Wrap-up-rating-by-technique remains open.
-12. ✅ Retake onboarding + appearance (light/dark/system) in Settings. (Pre-flight checklist
-    shipped with the P2 work.)
-13. ✅ `checkin_logged`, `review_completed`, and `onboarding_completed` events emitted
-    server-side. Also: pulse dimensions renamed to the PRD's six SRL dimensions (planning,
-    focus, resilience, confidence, environment, help-seeking).
+**P3 — feature completeness** — ✅ **largely implemented on this branch** 10. ✅ `planned_blocks.session_id` is set when a block launches a session; planned-vs-actual
+shown in the Planner header and as a weekly-review stat. 11. ✅ Session history list (expandable rows with tags and notes) and check-in confidence trend
+in Insights. Wrap-up-rating-by-technique remains open. 12. ✅ Retake onboarding + appearance (light/dark/system) in Settings. (Pre-flight checklist
+shipped with the P2 work.) 13. ✅ `checkin_logged`, `review_completed`, and `onboarding_completed` events emitted
+server-side. Also: pulse dimensions renamed to the PRD's six SRL dimensions (planning,
+focus, resilience, confidence, environment, help-seeking).

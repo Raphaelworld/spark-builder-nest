@@ -5,14 +5,8 @@ import { AppShell } from "@/components/app-shell";
 import { CoachCard } from "@/components/coach-card";
 import { EvidenceCard } from "@/components/evidence-card";
 import { OnboardingOverlay } from "@/components/onboarding-overlay";
-import {
-  activeSessionQueryOptions,
-  todaySummaryQueryOptions,
-} from "@/lib/session-queries";
-import {
-  goalsQueryOptions,
-  plannedBlocksQueryOptions,
-} from "@/lib/planner-queries";
+import { activeSessionQueryOptions, todaySummaryQueryOptions } from "@/lib/session-queries";
+import { goalsQueryOptions, plannedBlocksQueryOptions } from "@/lib/planner-queries";
 import { profileQueryOptions } from "@/lib/profile-queries";
 import { insightsQueryOptions } from "@/lib/insights-queries";
 import { evidenceQueryOptions } from "@/lib/evidence-queries";
@@ -56,12 +50,8 @@ function TodayPage() {
       .sort((a, b) => a.start_minute - b.start_minute)[0] ??
     blocks
       .filter((b) => b.day_of_week > todayIdx)
-      .sort(
-        (a, b) =>
-          a.day_of_week - b.day_of_week || a.start_minute - b.start_minute,
-      )[0];
+      .sort((a, b) => a.day_of_week - b.day_of_week || a.start_minute - b.start_minute)[0];
   const firstName = profile?.display_name?.split(" ")[0]?.trim();
-
 
   return (
     <AppShell>
@@ -77,7 +67,6 @@ function TodayPage() {
           <h1 className="font-serif text-4xl leading-tight text-foreground md:text-5xl">
             {firstName ? `Ready to focus, ${firstName}?` : "Ready to focus?"}
           </h1>
-
         </header>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -115,9 +104,6 @@ function TodayPage() {
 
         <EvidenceCard />
 
-
-
-
         <section className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-5">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -125,14 +111,9 @@ function TodayPage() {
             </p>
             {nextBlock ? (
               <div className="mt-2 space-y-1">
-                <p className="font-serif text-lg text-foreground">
-                  {nextBlock.title}
-                </p>
+                <p className="font-serif text-lg text-foreground">{nextBlock.title}</p>
                 <p className="text-xs text-muted-foreground">
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][
-                    nextBlock.day_of_week
-                  ]}{" "}
-                  ·{" "}
+                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][nextBlock.day_of_week]} ·{" "}
                   {`${Math.floor(nextBlock.start_minute / 60)}:${String(
                     nextBlock.start_minute % 60,
                   ).padStart(2, "0")}`}{" "}
@@ -156,9 +137,7 @@ function TodayPage() {
             )}
           </div>
           <div className="rounded-2xl border border-border bg-card p-5">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              Active goals
-            </p>
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Active goals</p>
             {activeGoals.length > 0 ? (
               <ul className="mt-2 space-y-1 text-sm text-foreground">
                 {activeGoals.slice(0, 3).map((g) => (
@@ -182,5 +161,4 @@ function TodayPage() {
       <OnboardingOverlay />
     </AppShell>
   );
-
 }

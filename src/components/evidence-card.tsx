@@ -35,8 +35,8 @@ export function EvidenceCard() {
       </div>
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          After a few wrap-ups, the chips you tag as "worked" show up here as gentle
-          reminders of what helps you focus.
+          After a few wrap-ups, the chips you tag as "worked" show up here as gentle reminders of
+          what helps you focus.
         </p>
       ) : (
         <ul className="space-y-2">
@@ -51,9 +51,7 @@ export function EvidenceCard() {
                   <span className="ml-2 text-xs text-muted-foreground">×{it.count}</span>
                 </p>
                 {it.latest_task && (
-                  <p className="truncate text-xs text-muted-foreground">
-                    last: {it.latest_task}
-                  </p>
+                  <p className="truncate text-xs text-muted-foreground">last: {it.latest_task}</p>
                 )}
               </div>
               <button

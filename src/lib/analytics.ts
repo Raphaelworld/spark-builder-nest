@@ -53,10 +53,7 @@ export function track(name: string, payload: EventPayload = {}) {
   scheduleFlush();
 }
 
-export function trackError(
-  error: unknown,
-  context: EventPayload = {},
-) {
+export function trackError(error: unknown, context: EventPayload = {}) {
   const err = error instanceof Error ? error : new Error(String(error));
   track("client_error", {
     message: err.message,
@@ -110,7 +107,11 @@ export function installAnalytics() {
       let payload: EventPayload = {};
       const raw = el.getAttribute("data-track-payload");
       if (raw) {
-        try { payload = JSON.parse(raw); } catch { /* ignore */ }
+        try {
+          payload = JSON.parse(raw);
+        } catch {
+          /* ignore */
+        }
       }
       track(name, {
         ...payload,

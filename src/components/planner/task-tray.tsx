@@ -120,8 +120,8 @@ function TaskCard({
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-foreground">{task.title}</p>
         <p className="truncate text-[10px] text-muted-foreground">
-          {TECHNIQUES[task.technique as TechniqueId]?.name ?? task.technique} · {task.planned_minutes}m
-          {goal ? ` · ${goal.title}` : ""}
+          {TECHNIQUES[task.technique as TechniqueId]?.name ?? task.technique} ·{" "}
+          {task.planned_minutes}m{goal ? ` · ${goal.title}` : ""}
         </p>
       </div>
       <button

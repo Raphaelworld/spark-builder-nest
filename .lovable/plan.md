@@ -1,6 +1,7 @@
 ## Goal
 
 Replace the current terracotta/persimmon-based primary theme with the GlobalLogic brand palette:
+
 - Orange `#F37037` (primary)
 - Black `#000000`
 - White `#FFFFFF`
@@ -17,6 +18,7 @@ This drives logo, buttons, icons, links, focus rings, active nav, CTA, chart-1, 
 ## Changes to `src/styles.css`
 
 ### `:root` (light)
+
 - `--terracotta: #F37037` (was `#B26A4E`) — the single change that cascades to `--primary`, `--ring`, `--sidebar-primary`, `--chart-1`-adjacent usage.
 - `--persimmon: #F37037`, `--persimmon-2: #F58A5A`, `--persimmon-3: #FEEDE3` — retune the persimmon ramp to the GlobalLogic orange family so `bg-accent` / `bg-persimmon-*` stay coherent.
 - `--cream: #F5F5F6` (slightly cooler, derived from Light Grey `#E6E7E8` lightened) so secondary surfaces align with the new neutral.
@@ -26,12 +28,14 @@ This drives logo, buttons, icons, links, focus rings, active nav, CTA, chart-1, 
 - `--chart-1: var(--persimmon)` → now GlobalLogic orange. Chart 2–5 keep Forest/Cobalt/Mustard/Deep-teal for legible multi-series.
 
 ### `.dark`
+
 - `--terracotta: #F37037` (same brand orange; already legible on dark).
 - `--persimmon: #F58A5A`, `--persimmon-2: #F7A582`, `--persimmon-3: #2A1810`.
 - `--paper`, `--cream`, `--ink` unchanged.
 - `--primary-foreground` stays near-black (`#1E1C19`) for contrast on orange.
 
 ### Contrast check
+
 - White text on `#F37037` primary buttons: ~3.1:1 — fails AA for body text. Keep primary-foreground = near-black (`#1E1814`), which passes ~7:1. Update `--primary-foreground` in light mode from `#FFFDF9` to `#1E1814`.
 - Orange on white for links/icons: ~3.1:1 — OK for large/UI elements, not body copy. Existing usage is buttons/icons/accents only, so acceptable.
 
