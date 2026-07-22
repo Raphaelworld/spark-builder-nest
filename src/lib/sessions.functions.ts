@@ -205,6 +205,7 @@ export const pauseSession = createServerFn({ method: "POST" })
       .select()
       .maybeSingle();
     if (error) throw new Error(error.message);
+    if (!row) throw new Error("Could not pause this session. It may already be paused.");
     return row;
   });
 
@@ -220,7 +221,7 @@ export const resumeSession = createServerFn({ method: "POST" })
       .eq("status", "active")
       .maybeSingle();
     if (rErr) throw new Error(rErr.message);
-    if (!current?.paused_at) return null;
+    if (!current?.paused_at) throw new Error("This session is not paused.");
     const pausedFor = Math.max(0, Date.now() - new Date(current.paused_at).getTime());
     const { data: row, error } = await context.supabase
       .from("sessions")
@@ -230,9 +231,9 @@ export const resumeSession = createServerFn({ method: "POST" })
       .select()
       .maybeSingle();
     if (error) throw new Error(error.message);
+    if (!row) throw new Error("Could not resume this session.");
     return row;
   });
-
 export const extendSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) =>
