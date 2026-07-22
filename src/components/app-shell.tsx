@@ -92,6 +92,9 @@ function Logo({ onTeal = false }: { onTeal?: boolean }) {
 export function AppShell({ children, wide = false }: { children: ReactNode; wide?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { dark, toggle } = useTheme();
+  // Focus session controls sit mid-viewport; the fixed mobile tab bar overlays
+  // them on short screens (e.g. iPhone SE), so clicks never reach Pause.
+  const hideMobileNav = pathname.startsWith("/session");
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -163,34 +166,42 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
 
       <SessionMiniBar />
 
-      <main className="md:pt-16 md:pb-8 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <main
+        className={
+          hideMobileNav
+            ? "pb-8 md:pt-16 md:pb-8"
+            : "pb-[calc(6rem+env(safe-area-inset-bottom))] md:pt-16 md:pb-8"
+        }
+      >
         <div className={`mx-auto px-4 py-6 md:py-10 ${wide ? "max-w-6xl" : "max-w-3xl"}`}>
           {children}
         </div>
       </main>
 
-      {/* Mobile bottom navigation */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-4 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
-        aria-label="Primary"
-      >
-        {NAV.map(({ to, label, icon: Icon }) => {
-          const active = pathname === to || pathname.startsWith(to + "/");
-          return (
-            <Link
-              key={to}
-              to={to}
-              className={`flex flex-col items-center gap-1 py-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                active ? "text-primary" : "text-muted-foreground"
-              }`}
-              aria-current={active ? "page" : undefined}
-            >
-              <Icon className="h-5 w-5" aria-hidden />
-              {label}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Mobile bottom navigation — hidden on /session so focus controls stay tappable */}
+      {!hideMobileNav && (
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-30 grid grid-cols-4 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+          aria-label="Primary"
+        >
+          {NAV.map(({ to, label, icon: Icon }) => {
+            const active = pathname === to || pathname.startsWith(to + "/");
+            return (
+              <Link
+                key={to}
+                to={to}
+                className={`flex flex-col items-center gap-1 py-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  active ? "text-primary" : "text-muted-foreground"
+                }`}
+                aria-current={active ? "page" : undefined}
+              >
+                <Icon className="h-5 w-5" aria-hidden />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+      )}
     </div>
   );
 }

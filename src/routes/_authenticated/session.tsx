@@ -518,7 +518,11 @@ function FocusView({ session }: { session: ActiveSession }) {
         </div>
 
         <div className="relative flex h-64 w-64 items-center justify-center md:h-80 md:w-80">
-          <svg viewBox="0 0 100 100" className="absolute inset-0 -rotate-90">
+          <svg
+            viewBox="0 0 100 100"
+            className="pointer-events-none absolute inset-0 -rotate-90"
+            aria-hidden
+          >
             <circle cx="50" cy="50" r="45" fill="none" stroke="var(--muted)" strokeWidth="4" />
             <circle
               cx="50"
