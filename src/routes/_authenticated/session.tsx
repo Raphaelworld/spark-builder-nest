@@ -418,17 +418,50 @@ function FocusView({ session }: { session: ActiveSession }) {
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["activeSession"] });
 
+  const patchActiveSession = (patch: Partial<{ paused_at: string | null; paused_ms: number }>) => {
+    qc.setQueryData(activeSessionQueryOptions().queryKey, (old) =>
+      old ? { ...old, ...patch } : old,
+    );
+  };
+
   const checkin = useMutation({
     mutationFn: (payload: CheckinResult) =>
       checkinFn({ data: { session_id: session.id, ...payload } }),
   });
   const pause = useMutation({
     mutationFn: () => pauseFn({ data: { session_id: session.id } }),
-    onSuccess: invalidate,
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: ["activeSession"] });
+      const previous = qc.getQueryData(activeSessionQueryOptions().queryKey);
+      patchActiveSession({ paused_at: new Date().toISOString() });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous !== undefined) {
+        qc.setQueryData(activeSessionQueryOptions().queryKey, ctx.previous);
+      }
+    },
+    onSettled: invalidate,
   });
   const resume = useMutation({
     mutationFn: () => resumeFn({ data: { session_id: session.id } }),
-    onSuccess: invalidate,
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: ["activeSession"] });
+      const previous = qc.getQueryData(activeSessionQueryOptions().queryKey);
+      const pausedAt = previous?.paused_at ? new Date(previous.paused_at).getTime() : Date.now();
+      const pausedFor = Math.max(0, Date.now() - pausedAt);
+      patchActiveSession({
+        paused_at: null,
+        paused_ms: (previous?.paused_ms ?? session.paused_ms ?? 0) + pausedFor,
+      });
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous !== undefined) {
+        qc.setQueryData(activeSessionQueryOptions().queryKey, ctx.previous);
+      }
+    },
+    onSettled: invalidate,
   });
   const extend = useMutation({
     mutationFn: () => extendFn({ data: { session_id: session.id, minutes: 5 } }),
@@ -544,31 +577,41 @@ function FocusView({ session }: { session: ActiveSession }) {
           </div>
         </div>
 
-        <div className="flex w-full items-center justify-center gap-3">
-          <button
-            onClick={() => (paused ? resume.mutate() : pause.mutate())}
-            disabled={pause.isPending || resume.isPending}
-            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {paused ? (
-              <>
-                <Play className="h-4 w-4" aria-hidden />
-                Resume
-              </>
-            ) : (
-              <>
-                <Pause className="h-4 w-4" aria-hidden />
-                Pause
-              </>
-            )}
-          </button>
-          <button
-            onClick={() => extend.mutate()}
-            disabled={extend.isPending}
-            className="flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Plus className="h-4 w-4" aria-hidden />5 min
-          </button>
+        <div className="flex w-full flex-col items-center gap-2">
+          <div className="flex w-full items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => (paused ? resume.mutate() : pause.mutate())}
+              disabled={pause.isPending || resume.isPending}
+              aria-pressed={paused}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {paused ? (
+                <>
+                  <Play className="h-4 w-4" aria-hidden />
+                  Resume
+                </>
+              ) : (
+                <>
+                  <Pause className="h-4 w-4" aria-hidden />
+                  Pause
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => extend.mutate()}
+              disabled={extend.isPending}
+              className="flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-sm font-medium hover:bg-accent disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Plus className="h-4 w-4" aria-hidden />5 min
+            </button>
+          </div>
+          {(pause.isError || resume.isError) && (
+            <p role="alert" className="text-center text-sm text-destructive">
+              {(pause.error ?? resume.error)?.message ?? "Could not update the timer."}
+            </p>
+          )}
         </div>
 
         <div className="flex w-full flex-col gap-3">
