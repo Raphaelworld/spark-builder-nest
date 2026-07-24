@@ -2,7 +2,7 @@
 
 A study/focus companion app: plan your week in blocks, run focus sessions with check-ins and a coach, reflect afterwards, and track goals and insights over time.
 
-Built with [Lovable](https://lovable.dev) and connected to a hosted Supabase backend (Lovable Cloud).
+.
 
 ## Stack
 
@@ -36,7 +36,6 @@ The committed `.env` contains the Supabase URL and **publishable** (public, clie
 
 - **Routing** is file-based under `src/routes/`; `src/routeTree.gen.ts` is auto-generated — never hand-edit it. Authenticated pages live under `src/routes/_authenticated/`.
 - **Package manager**: use `npm` (`package-lock.json` is the source of truth). `bun.lock`/`bunfig.toml` exist because Lovable uses bun internally.
-- **Lovable sync**: commits pushed to the connected branch sync back to Lovable. Avoid force-pushing or rewriting published history, and keep `main` in a working state.
 - **Auth for testing**: the hosted Supabase project requires email confirmation, so a freshly signed-up account cannot log in without confirming. Use an already-confirmed test account or Google OAuth to exercise authenticated flows.
 - See `AGENTS.md` for agent/cloud-environment specifics.
 
